@@ -3,7 +3,9 @@ package otp
 import (
 	"encoding/base32"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	myredis "github.com/diazharizky/rest-otp-generator/pkg/redis"
@@ -67,7 +69,13 @@ func (o *MyOTP) GenerateOTP(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err = o.DB.Set(p.Key, passcode, p.Period*time.Second); err != nil {
+	rVal := myredis.OTPValue{Passcode: passcode, Attempts: 3}
+	fVal, err := toMSI(rVal)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = o.DB.HSet(p.Key, fVal, p.Period*time.Second); err != nil {
 		panic(err)
 	}
 
@@ -103,20 +111,37 @@ func (o *MyOTP) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := o.DB.Get(p.Key)
+	var d myredis.OTPValue
+	err = o.DB.HGetAll(p.Key).Scan(&d)
 	if err != nil {
 		panic(err)
 	}
 
-	if len(exists) <= 0 {
-		w.Write([]byte(message))
-		return
+	v := reflect.ValueOf(d)
+	typeOfS := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		fmt.Printf("Field: %s", typeOfS.Field(i).Name)
 	}
 
-	if err = o.DB.Remove(p.Key); err != nil {
+	if err = o.DB.HRemove(p.Key); err != nil {
 		panic(err)
 	}
 
 	message = "Your OTP is valid!"
 	w.Write([]byte(message))
+}
+
+func toMSI(val interface{}) (interface{}, error) {
+	b, err := json.Marshal(val)
+	if err != nil {
+		return nil, err
+	}
+
+	var i map[string]interface{}
+	if err = json.Unmarshal(b, &i); err != nil {
+		return nil, err
+	}
+
+	return i, nil
 }

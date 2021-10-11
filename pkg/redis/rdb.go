@@ -13,21 +13,20 @@ type RDB struct {
 
 var ctx = context.Background()
 
-func (r *RDB) Set(key string, value interface{}, expired time.Duration) error {
-	err := r.Client.Set(ctx, key, value, expired).Err()
-	return err
-}
-
-func (r *RDB) Get(key string) (string, error) {
-	val, err := r.Client.Get(ctx, key).Result()
-	if err != nil && err != redis.Nil {
-		return "", err
+func (r *RDB) HSet(key string, value interface{}, expired time.Duration) (err error) {
+	if err = r.Client.HSet(ctx, key, value).Err(); err != nil {
+		return
 	}
 
-	return val, nil
+	err = r.Client.Expire(ctx, key, expired).Err()
+	return
 }
 
-func (r *RDB) Remove(key string) error {
-	err := r.Client.Del(ctx, key).Err()
+func (r *RDB) HGetAll(key string) *redis.StringStringMapCmd {
+	return r.Client.HGetAll(ctx, key)
+}
+
+func (r *RDB) HRemove(key string) error {
+	err := r.Client.HDel(ctx, key).Err()
 	return err
 }

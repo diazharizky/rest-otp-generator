@@ -12,6 +12,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-chi/chi v1.5.4 // indirect
 	github.com/go-redis/redis/v8 v8.11.4 // indirect
+	github.com/gomodule/redigo v1.8.5 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
