@@ -3,9 +3,7 @@ package otp
 import (
 	"encoding/base32"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"reflect"
 	"time"
 
 	myredis "github.com/diazharizky/rest-otp-generator/pkg/redis"
@@ -95,7 +93,33 @@ func (o *MyOTP) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	message := "Your OTP is invalid!"
+	if len(p.Passcode) != int(p.Digits) {
+		w.Write([]byte(message))
+		return
+	}
+
 	p.Key = chi.URLParam(r, "key")
+	hOTP, err := o.DB.HGetAll(p.Key)
+	if err != nil {
+		panic(err)
+	}
+
+	if hOTP == nil {
+		w.Write([]byte(message))
+		return
+	}
+
+	var d myredis.OTPValue
+	if err = hOTP.Scan(&d); err != nil {
+		panic(err)
+	}
+
+	if d.Attempts <= 0 {
+		w.Write([]byte(message))
+		return
+	}
+
 	secret := base32.StdEncoding.EncodeToString([]byte(p.Key))
 	valid, err := totp.ValidateCustom(p.Passcode, secret, time.Now(), totp.ValidateOpts{
 		Period: uint(p.Period),
@@ -105,26 +129,22 @@ func (o *MyOTP) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	message := "Your OTP is invalid!"
 	if !valid {
+		d.Attempts -= 1
+		fVal, err := toMSI(d)
+		if err != nil {
+			panic(err)
+		}
+
+		if err = o.DB.HSet(p.Key, fVal, p.Period*time.Second); err != nil {
+			panic(err)
+		}
+
 		w.Write([]byte(message))
 		return
 	}
 
-	var d myredis.OTPValue
-	err = o.DB.HGetAll(p.Key).Scan(&d)
-	if err != nil {
-		panic(err)
-	}
-
-	v := reflect.ValueOf(d)
-	typeOfS := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-		fmt.Printf("Field: %s", typeOfS.Field(i).Name)
-	}
-
-	if err = o.DB.HRemove(p.Key); err != nil {
+	if err = o.DB.Remove(p.Key); err != nil {
 		panic(err)
 	}
 

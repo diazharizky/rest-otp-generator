@@ -22,11 +22,18 @@ func (r *RDB) HSet(key string, value interface{}, expired time.Duration) (err er
 	return
 }
 
-func (r *RDB) HGetAll(key string) *redis.StringStringMapCmd {
-	return r.Client.HGetAll(ctx, key)
+func (r *RDB) HGetAll(key string) (*redis.StringStringMapCmd, error) {
+	exists, err := r.Client.Exists(ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
+	if exists == 0 {
+		return nil, nil
+	}
+	return r.Client.HGetAll(ctx, key), nil
 }
 
-func (r *RDB) HRemove(key string) error {
-	err := r.Client.HDel(ctx, key).Err()
+func (r *RDB) Remove(key string) error {
+	err := r.Client.Del(ctx, key).Err()
 	return err
 }
