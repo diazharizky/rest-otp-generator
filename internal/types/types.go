@@ -17,7 +17,3 @@ type DBService interface {
 	Upsert(context.Context, otp.OTP) error
 	Delete(ctx context.Context, id string) error
 }
-
-type OTPGen interface {
-	GenerateOTP() (string, error)
-}

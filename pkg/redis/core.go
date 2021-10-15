@@ -18,8 +18,8 @@ func Connect(host string, port string, password string) *redis.Client {
 	addr := fmt.Sprintf("%s:%s", host, port)
 	return redis.NewClient(&redis.Options{
 		Addr:     addr,
-		DB:       0,
 		Password: password,
+		DB:       0,
 	})
 }
 
@@ -71,15 +71,15 @@ func (r *RDB) Health() error {
 
 // Convert any type of value to map[string]interface{}
 func toMSI(val interface{}) (interface{}, error) {
-	js, err := json.Marshal(val)
+	m, err := json.Marshal(val)
 	if err != nil {
 		return nil, err
 	}
 
-	var i map[string]interface{}
-	if err = json.Unmarshal(js, &i); err != nil {
+	var u map[string]interface{}
+	if err = json.Unmarshal(m, &u); err != nil {
 		return nil, err
 	}
 
-	return i, nil
+	return u, nil
 }

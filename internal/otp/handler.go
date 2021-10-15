@@ -38,51 +38,53 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 		p.Digits = 6
 	}
 
-	passcode, err := c.generateOTP(p)
+	if err = mCore.generateOTP(p); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res := map[string]interface{}{"passcode": p.Passcode}
+	rByte, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	res := map[string]interface{}{"passcode": passcode}
-	resByte, err := json.Marshal(res)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(resByte)
+	w.Write(rByte)
 }
 
 func verifyOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var p otp.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	defer r.Body.Close()
 
-	message := "Incomplete parameter"
 	v := validator.New()
 	if err = v.Struct(p); err != nil {
-		w.Write([]byte(message))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	message = "Your OTP is invalid!"
+	message := "Your OTP is invalid!"
 	if len(p.Passcode) != int(p.Digits) {
+		w.WriteHeader(400)
 		w.Write([]byte(message))
 		return
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	if err := c.verifyOTP(p); err != nil {
+	if err = mCore.verifyOTP(p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	message = "Your OTP is valid!"
+	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(message))
 }
