@@ -15,7 +15,7 @@ var rootCmd *cobra.Command
 func init() {
 	rootCmd = &cobra.Command{
 		Use:   "app",
-		Short: "Start main app",
+		Short: "Start OTP generator app",
 		Run: func(cmd *cobra.Command, args []string) {
 			serve()
 		},
@@ -23,8 +23,8 @@ func init() {
 }
 
 func serve() {
-	listenPort := configs.Config.GetInt("listen.port")
-	log.Info("Listening on " + configs.Config.GetString("listen.host") + ":" + fmt.Sprintf("%d", listenPort) + "!")
+	listenPort := configs.Cfg.GetInt("listen.port")
+	log.Info("Listening on " + configs.Cfg.GetString("listen.host") + ":" + fmt.Sprintf("%d", listenPort) + "!")
 	http.ListenAndServe(fmt.Sprintf(":%d", listenPort), routes.Router())
 }
 

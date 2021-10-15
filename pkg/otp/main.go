@@ -8,7 +8,7 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
-func GenerateOTP(p *BaseOTPPayload) (string, error) {
+func GenerateOTP(p OTP) (string, error) {
 	secret := base32.StdEncoding.EncodeToString([]byte(p.Key))
 	passcode, err := totp.GenerateCodeCustom(secret, time.Now(), totp.ValidateOpts{
 		Period: uint(p.Period),

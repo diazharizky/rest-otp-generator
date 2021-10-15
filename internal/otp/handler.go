@@ -20,7 +20,7 @@ func Handler() (r *chi.Mux) {
 
 func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var p otp.BaseOTPPayload
+	var p otp.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -38,7 +38,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 		p.Digits = 6
 	}
 
-	passcode, err := c.generateOTP(&p)
+	passcode, err := c.generateOTP(p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -57,7 +57,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 func verifyOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var p otp.VerifyOTPPayload
+	var p otp.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
 		panic(err)
 	}
@@ -77,7 +77,7 @@ func verifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	if err := c.verifyOTP(&p); err != nil {
+	if err := c.verifyOTP(p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

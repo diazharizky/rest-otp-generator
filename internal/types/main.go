@@ -1,20 +1,23 @@
-package otp
+package types
 
 import (
 	"context"
 
-	"github.com/diazharizky/rest-otp-generator/internal/types"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 )
 
+type Service interface {
+	Health() error
+}
+
 type DBService interface {
-	types.Service
+	Service
 
 	Get(context.Context, otp.OTP) error
 	Upsert(context.Context, otp.OTP) error
 	Delete(ctx context.Context, id string) error
 }
 
-type core struct {
-	DB DBService
+type OTPGen interface {
+	GenerateOTP() (string, error)
 }

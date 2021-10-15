@@ -6,21 +6,21 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Config *viper.Viper
+var Cfg *viper.Viper
 
 func init() {
-	Config = viper.New()
-	Config.SetDefault("listen.host", "0.0.0.0")
-	Config.SetDefault("listen.port", 5000)
+	Cfg = viper.New()
+	Cfg.SetDefault("listen.host", "0.0.0.0")
+	Cfg.SetDefault("listen.port", 5000)
 
 	loadConfig()
 }
 
 func loadConfig() {
-	Config.SetConfigName("config")
-	Config.SetConfigType("yaml")
-	Config.AddConfigPath("./configs")
-	if err := Config.ReadInConfig(); err != nil {
+	Cfg.SetConfigName("config")
+	Cfg.SetConfigType("yaml")
+	Cfg.AddConfigPath("./configs")
+	if err := Cfg.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("cannot read config file: %w", err))
 	}
 }
