@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/diazharizky/rest-otp-generator/pkg/routes"
+	"github.com/diazharizky/rest-otp-generator/configs"
+	"github.com/diazharizky/rest-otp-generator/internal/routes"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var rootCmd *cobra.Command
@@ -23,8 +23,8 @@ func init() {
 }
 
 func serve() {
-	listenPort := viper.GetInt("listen.port")
-	log.Info("Listening on " + viper.GetString("listen.host") + ":" + fmt.Sprintf("%d", listenPort) + "!")
+	listenPort := configs.Config.GetInt("listen.port")
+	log.Info("Listening on " + configs.Config.GetString("listen.host") + ":" + fmt.Sprintf("%d", listenPort) + "!")
 	http.ListenAndServe(fmt.Sprintf(":%d", listenPort), routes.Router())
 }
 

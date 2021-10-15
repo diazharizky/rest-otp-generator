@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/go-chi/chi"
 
-	"github.com/diazharizky/rest-otp-generator/pkg/otp"
+	"github.com/diazharizky/rest-otp-generator/internal/otp"
 )
 
 func Router() chi.Router {
