@@ -9,5 +9,5 @@ type core struct {
 }
 
 type healthStatus struct {
-	DB string `json:"redis"`
+	DB string `json:"db"`
 }
