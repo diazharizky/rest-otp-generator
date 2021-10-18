@@ -4,10 +4,10 @@ import (
 	"github.com/diazharizky/rest-otp-generator/internal/types"
 )
 
-type HealthStatus struct {
-	Redis string `json:"redis"`
+type core struct {
+	DB types.DBService
 }
 
-type core struct {
-	Redis types.DBService
+type healthStatus struct {
+	DB string `json:"redis"`
 }

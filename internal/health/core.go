@@ -5,26 +5,28 @@ import (
 	"github.com/diazharizky/rest-otp-generator/pkg/redis"
 )
 
-func New() {
-
-}
-
 func init() {
 	configs.Cfg.SetDefault("redis.host", "0.0.0.0")
 	configs.Cfg.SetDefault("redis.port", 6379)
+	configs.Cfg.SetDefault("redis.password", "")
 
-	c.Redis = &redis.RDB{
-		Client: redis.Connect(configs.Cfg.GetString("redis.host"), configs.Cfg.GetString("redis.port"), configs.Cfg.GetString("redis.password")),
+	redisCfg := redis.Cfg{
+		Host:     configs.Cfg.GetString("redis.host"),
+		Port:     configs.Cfg.GetString("redis.port"),
+		Password: configs.Cfg.GetString("redis.password"),
+		Database: 0,
+	}
+
+	mCore.DB = &redis.Service{
+		Client: redis.Connect(redisCfg),
 	}
 }
 
-func (c *core) Health() HealthStatus {
-	redisHealth := "OK"
-	if err := c.Redis.Health(); err != nil {
-		redisHealth = "NOK"
+func (c *core) health() healthStatus {
+	dbHealth := "OK"
+	if err := c.DB.Health(); err != nil {
+		dbHealth = "NOK"
 	}
 
-	return HealthStatus{
-		Redis: redisHealth,
-	}
+	return healthStatus{DB: dbHealth}
 }

@@ -1,12 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/diazharizky/rest-otp-generator/configs"
-	"github.com/diazharizky/rest-otp-generator/internal/routes"
-	log "github.com/sirupsen/logrus"
+	"github.com/diazharizky/rest-otp-generator/internal/server"
 	"github.com/spf13/cobra"
 )
 
@@ -17,15 +12,9 @@ func init() {
 		Use:   "app",
 		Short: "Start OTP generator app",
 		Run: func(cmd *cobra.Command, args []string) {
-			serve()
+			server.Serve()
 		},
 	}
-}
-
-func serve() {
-	listenPort := configs.Cfg.GetInt("listen.port")
-	log.Info("Listening on " + configs.Cfg.GetString("listen.host") + ":" + fmt.Sprintf("%d", listenPort) + "!")
-	http.ListenAndServe(fmt.Sprintf(":%d", listenPort), routes.Router())
 }
 
 func Execute() error {

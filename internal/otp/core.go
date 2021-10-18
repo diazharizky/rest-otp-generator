@@ -16,13 +16,20 @@ func init() {
 	configs.Cfg.SetDefault("redis.port", 6379)
 	configs.Cfg.SetDefault("redis.password", "")
 
-	mCore.DB = &redis.RDB{
-		Client: redis.Connect(configs.Cfg.GetString("redis.host"), configs.Cfg.GetString("redis.port"), configs.Cfg.GetString("redis.password")),
+	redisCfg := redis.Cfg{
+		Host:     configs.Cfg.GetString("redis.host"),
+		Port:     configs.Cfg.GetString("redis.port"),
+		Password: configs.Cfg.GetString("redis.password"),
+		Database: 0,
+	}
+
+	mCore.DB = &redis.Service{
+		Client: redis.Connect(redisCfg),
 	}
 }
 
 func (c *core) generateOTP(p otp.OTP) error {
-	code, err := otp.GenerateOTP(p)
+	code, err := otp.GenerateCode(p)
 	if err != nil {
 		return err
 	}
@@ -50,7 +57,7 @@ func (c *core) verifyOTP(p otp.OTP) error {
 		return errors.New("invalid OTP")
 	}
 
-	valid, err := otp.VerifyOTP(p)
+	valid, err := otp.VerifyCode(p)
 	if err != nil {
 		return err
 	}

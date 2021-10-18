@@ -10,20 +10,27 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type RDB struct {
+type Service struct {
 	Client *redis.Client
 }
 
-func Connect(host string, port string, password string) *redis.Client {
-	addr := fmt.Sprintf("%s:%s", host, port)
+type Cfg struct {
+	Host     string
+	Port     string
+	Password string
+	Database int
+}
+
+func Connect(cfg Cfg) *redis.Client {
+	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	return redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: password,
-		DB:       0,
+		Password: cfg.Password,
+		DB:       cfg.Database,
 	})
 }
 
-func (r *RDB) Get(ctx context.Context, p otp.OTP) error {
+func (r *Service) Get(ctx context.Context, p otp.OTP) error {
 	exists, err := r.Client.Exists(ctx, p.Key).Result()
 	if err != nil {
 		return err
@@ -40,13 +47,13 @@ func (r *RDB) Get(ctx context.Context, p otp.OTP) error {
 	return nil
 }
 
-func (r *RDB) Upsert(ctx context.Context, p otp.OTP) (err error) {
-	fVal, err := toMSI(p)
+func (r *Service) Upsert(ctx context.Context, p otp.OTP) (err error) {
+	val, err := toMSI(p)
 	if err != nil {
 		return err
 	}
 
-	if err = r.Client.HSet(ctx, p.Key, fVal).Err(); err != nil {
+	if err = r.Client.HSet(ctx, p.Key, val).Err(); err != nil {
 		return
 	}
 
@@ -54,12 +61,12 @@ func (r *RDB) Upsert(ctx context.Context, p otp.OTP) (err error) {
 	return
 }
 
-func (r *RDB) Delete(ctx context.Context, id string) error {
+func (r *Service) Delete(ctx context.Context, id string) error {
 	err := r.Client.Del(ctx, id).Err()
 	return err
 }
 
-func (r *RDB) Health() error {
+func (r *Service) Health() error {
 	ctx := context.Background()
 	_, err := r.Client.Ping(ctx).Result()
 	if err != nil {

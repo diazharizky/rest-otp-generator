@@ -20,6 +20,7 @@ func loadConfig() {
 	Cfg.SetConfigName("config")
 	Cfg.SetConfigType("yaml")
 	Cfg.AddConfigPath("./configs")
+
 	if err := Cfg.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("cannot read config file: %w", err))
 	}
