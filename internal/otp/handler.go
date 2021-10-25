@@ -14,7 +14,7 @@ func Handler() (r *chi.Mux) {
 	r = chi.NewRouter()
 	basePath := "/{key}"
 	r.Post(basePath, generateOTPHandler)
-	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTP)
+	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTPHandler)
 	return
 }
 
@@ -38,7 +38,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 		p.Digits = 6
 	}
 
-	if err = mCore.generateOTP(p); err != nil {
+	if err = mCore.generateOTP(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -55,7 +55,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(rByte)
 }
 
-func verifyOTP(w http.ResponseWriter, r *http.Request) {
+func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var p otp.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
@@ -78,7 +78,7 @@ func verifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	if err = mCore.verifyOTP(p); err != nil {
+	if err = mCore.verifyOTP(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -28,24 +28,24 @@ func init() {
 	}
 }
 
-func (c *core) generateOTP(p otp.OTP) error {
-	code, err := otp.GenerateCode(p)
+func (c *core) generateOTP(p *otp.OTP) error {
+	code, err := otp.GenerateCode(*p)
 	if err != nil {
 		return err
 	}
 
 	p.Passcode = code
 	ctx := context.Background()
-	if err = c.DB.Upsert(ctx, p); err != nil {
+	if err = c.DB.Upsert(ctx, *p); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *core) verifyOTP(p otp.OTP) error {
+func (c *core) verifyOTP(p *otp.OTP) error {
 	ctx := context.Background()
-	if err := c.DB.Get(ctx, p); err != nil {
+	if err := c.DB.Get(ctx, *p); err != nil {
 		return err
 	}
 
@@ -57,14 +57,14 @@ func (c *core) verifyOTP(p otp.OTP) error {
 		return errors.New("invalid OTP")
 	}
 
-	valid, err := otp.VerifyCode(p)
+	valid, err := otp.VerifyCode(*p)
 	if err != nil {
 		return err
 	}
 
 	if !valid {
 		p.Attempts -= 1
-		if err = c.DB.Upsert(ctx, p); err != nil {
+		if err = c.DB.Upsert(ctx, *p); err != nil {
 			return err
 		}
 
