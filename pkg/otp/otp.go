@@ -9,22 +9,35 @@ import (
 )
 
 type OTPBase struct {
-	Key      string
-	Digits   int8          `json:"digits" validate:"required" redis:"digits"`
-	Period   time.Duration `json:"period"`
-	Attempts int8          `json:"attempts" redis:"attempts"`
-}
-
-type OTP struct {
-	OTPBase
-
-	Passcode string `json:"passcode" redis:"passcode"`
+	Key         string
+	Period      time.Duration `json:"period"`
+	Digits      int8          `json:"digits"`
+	MaxAttempts int8          `json:"max_attempts" redis:"max_attempts"`
+	Attempts    int8          `json:"attempts" redis:"attempts"`
 }
 
 type OTPV struct {
 	OTPBase
 
-	Passcode string `json:"passcode" redis:"passcode" validate:"required"`
+	Passcode string `json:"passcode" validate:"required"`
+}
+
+func (p *OTPBase) SetDefaultValues() {
+	if p.Digits < 4 {
+		p.Digits = 4
+	}
+
+	if p.Digits > 6 {
+		p.Digits = 6
+	}
+
+	if p.Period > 300 {
+		p.Period = 300 * time.Second
+	}
+
+	if p.Period < 60 {
+		p.Period = 60 * time.Second
+	}
 }
 
 func GenerateCode(p OTPBase) (string, error) {

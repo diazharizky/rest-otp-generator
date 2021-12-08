@@ -10,10 +10,9 @@ import (
 
 type Database interface {
 	Health() error
-
-	Get(context.Context, *otp.OTP) error
-	Upsert(context.Context, otp.OTP) error
-	Delete(ctx context.Context, id string) error
+	Get(context.Context, *otp.OTPBase) error
+	Upsert(context.Context, otp.OTPBase) error
+	Delete(ctx context.Context, key string) error
 }
 
 func GetCfg() redis.Cfg {

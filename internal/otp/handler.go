@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/go-chi/chi"
@@ -23,7 +22,7 @@ func Handler() (r *chi.Mux) {
 
 func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var p otp.OTP
+	var p otp.OTPBase
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -36,22 +35,23 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.Attempts = 3
 	p.Key = chi.URLParam(r, "key")
-	if p.Digits > 6 {
-		p.Digits = 6
+	p.SetDefaultValues()
+	if p.MaxAttempts < 3 {
+		p.MaxAttempts = 3
 	}
 
-	if p.Period <= 60 {
-		p.Period = 60 * time.Second
+	if p.MaxAttempts > 5 {
+		p.MaxAttempts = 5
 	}
 
-	if err = c.generateOTP(&p); err != nil {
+	passcode, err := c.generateOTP(&p)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	res := map[string]interface{}{"passcode": p.Passcode}
+	res := map[string]interface{}{"passcode": passcode}
 	rjs, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -86,8 +86,9 @@ func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	if err = c.verifyOTP(p); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	p.SetDefaultValues()
+	if err = c.verifyOTP(&p); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

@@ -10,6 +10,7 @@ import (
 func Handler() (r *chi.Mux) {
 	r = chi.NewRouter()
 	r.Get("/", health)
+
 	return
 }
 
