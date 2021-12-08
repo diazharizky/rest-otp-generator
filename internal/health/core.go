@@ -25,6 +25,5 @@ func (c *core) healthCheck() healthStatus {
 	if err := c.Db.Health(); err != nil {
 		dbHealth = false
 	}
-
 	return healthStatus{Db: dbHealth}
 }

@@ -12,11 +12,9 @@ import (
 
 func Handler() (r *chi.Mux) {
 	r = chi.NewRouter()
-
 	basePath := "/{key}"
 	r.Post(basePath, generateOTPHandler)
 	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTPHandler)
-
 	return
 }
 
@@ -40,7 +38,6 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	if p.MaxAttempts < 3 {
 		p.MaxAttempts = 3
 	}
-
 	if p.MaxAttempts > 5 {
 		p.MaxAttempts = 5
 	}

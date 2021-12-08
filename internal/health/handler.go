@@ -7,11 +7,11 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func Handler() (r *chi.Mux) {
-	r = chi.NewRouter()
+func Handler() *chi.Mux {
+	r := chi.NewRouter()
 	r.Get("/", health)
 
-	return
+	return r
 }
 
 func health(w http.ResponseWriter, r *http.Request) {

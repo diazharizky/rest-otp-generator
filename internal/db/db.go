@@ -10,6 +10,7 @@ import (
 
 type Database interface {
 	Health() error
+
 	Get(context.Context, *otp.OTPBase) error
 	Upsert(context.Context, otp.OTPBase) error
 	Delete(ctx context.Context, key string) error
