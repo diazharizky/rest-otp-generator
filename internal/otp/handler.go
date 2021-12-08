@@ -16,7 +16,7 @@ func Handler() (r *chi.Mux) {
 
 	basePath := "/{key}"
 	r.Post(basePath, generateOTPHandler)
-	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTP)
+	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTPHandler)
 
 	return
 }
@@ -63,7 +63,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(rjs)
 }
 
-func verifyOTP(w http.ResponseWriter, r *http.Request) {
+func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var p otp.OTPV
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {

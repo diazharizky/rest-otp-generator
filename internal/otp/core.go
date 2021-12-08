@@ -50,7 +50,7 @@ func (c *core) verifyOTP(p otp.OTPV) (err error) {
 		return errors.New("invalid OTP")
 	}
 
-	valid, err := otp.VerifyCode(p)
+	valid, err := otp.VerifyCode(*p)
 	if err != nil {
 		return
 	}
