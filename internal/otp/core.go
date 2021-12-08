@@ -4,51 +4,44 @@ import (
 	"context"
 	"errors"
 
-	"github.com/diazharizky/rest-otp-generator/configs"
+	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/diazharizky/rest-otp-generator/pkg/redis"
 )
 
-var mCore core
-
-func init() {
-	configs.Cfg.SetDefault("redis.host", "0.0.0.0")
-	configs.Cfg.SetDefault("redis.port", 6379)
-	configs.Cfg.SetDefault("redis.password", "")
-
-	redisCfg := redis.Cfg{
-		Host:     configs.Cfg.GetString("redis.host"),
-		Port:     configs.Cfg.GetString("redis.port"),
-		Password: configs.Cfg.GetString("redis.password"),
-		Database: 0,
-	}
-
-	mCore.DB = &redis.Service{
-		Client: redis.Connect(redisCfg),
-	}
+type core struct {
+	Db db.Database
 }
 
-func (c *core) generateOTP(p otp.OTP) error {
-	code, err := otp.GenerateCode(p)
+var c core
+
+func init() {
+	c.Db = &redis.Service{Client: redis.Connect(db.GetCfg())}
+}
+
+func (c *core) generateOTP(p *otp.OTP) (err error) {
+	code, err := otp.GenerateCode(p.OTPBase)
 	if err != nil {
-		return err
+		return
 	}
 
 	p.Passcode = code
 	ctx := context.Background()
-	if err = c.DB.Upsert(ctx, p); err != nil {
-		return err
+	if err = c.Db.Upsert(ctx, *p); err != nil {
+		return
 	}
 
-	return nil
+	return
 }
 
-func (c *core) verifyOTP(p otp.OTP) error {
+func (c *core) verifyOTP(p otp.OTPV) (err error) {
 	ctx := context.Background()
-	if err := c.DB.Get(ctx, p); err != nil {
-		return err
+	o := otp.OTP{OTPBase: p.OTPBase}
+	if err = c.Db.Get(ctx, &o); err != nil {
+		return
 	}
 
+	p.OTPBase = o.OTPBase
 	if p.Passcode == "" {
 		return errors.New("invalid OTP")
 	}
@@ -59,20 +52,20 @@ func (c *core) verifyOTP(p otp.OTP) error {
 
 	valid, err := otp.VerifyCode(p)
 	if err != nil {
-		return err
+		return
 	}
 
 	if !valid {
-		p.Attempts -= 1
-		if err = c.DB.Upsert(ctx, p); err != nil {
-			return err
+		o.Attempts -= 1
+		if err = c.Db.Upsert(ctx, o); err != nil {
+			return
 		}
 
 		return errors.New("invalid OTP")
 	}
 
-	if err = c.DB.Delete(ctx, p.Key); err != nil {
-		return err
+	if err = c.Db.Delete(ctx, p.Key); err != nil {
+		return
 	}
 
 	return nil

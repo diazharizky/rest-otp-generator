@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/go-chi/chi"
@@ -12,9 +13,11 @@ import (
 
 func Handler() (r *chi.Mux) {
 	r = chi.NewRouter()
+
 	basePath := "/{key}"
 	r.Post(basePath, generateOTPHandler)
 	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTP)
+
 	return
 }
 
@@ -25,45 +28,50 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer r.Body.Close()
 
+	defer r.Body.Close()
 	v := validator.New()
 	if err = v.Struct(p); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	p.Attempts = 3
 	p.Key = chi.URLParam(r, "key")
 	if p.Digits > 6 {
 		p.Digits = 6
 	}
 
-	if err = mCore.generateOTP(p); err != nil {
+	if p.Period <= 60 {
+		p.Period = 60 * time.Second
+	}
+
+	if err = c.generateOTP(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	res := map[string]interface{}{"passcode": p.Passcode}
-	rByte, err := json.Marshal(res)
+	rjs, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(rByte)
+	w.WriteHeader(200)
+	w.Write(rjs)
 }
 
 func verifyOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var p otp.OTP
+	var p otp.OTPV
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer r.Body.Close()
 
+	defer r.Body.Close()
 	v := validator.New()
 	if err = v.Struct(p); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -78,13 +86,12 @@ func verifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	if err = mCore.verifyOTP(p); err != nil {
+	if err = c.verifyOTP(p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	message = "Your OTP is valid!"
 	w.WriteHeader(200)
-	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(message))
 }

@@ -7,23 +7,19 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var mCore core
-
 func Handler() (r *chi.Mux) {
 	r = chi.NewRouter()
-	r.Get("/", healthCheck)
+	r.Get("/", health)
 	return
 }
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	status := mCore.health().DB
-	res := map[string]interface{}{"status": status}
-	resByte, err := json.Marshal(res)
+func health(w http.ResponseWriter, r *http.Request) {
+	res, err := json.Marshal(c.healthCheck())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(resByte)
+	w.Write(res)
 }
