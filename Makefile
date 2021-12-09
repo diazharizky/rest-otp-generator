@@ -6,9 +6,6 @@
 run:
 	go run main.go
 
-test:
-	go run main.go test
-
 generate:
 	go generate -v ./... && go get -v ./...
 
