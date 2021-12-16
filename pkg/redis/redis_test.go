@@ -9,7 +9,7 @@ import (
 var svc Service
 
 func init() {
-	dbIndex, _ := strconv.ParseInt(os.Getenv("OTP_GEN_REDIS_DB"), 10, 0)
+	dbIndex, _ := strconv.ParseInt(os.Getenv("OTPGEN_REDIS_DB"), 10, 0)
 	cfg := Cfg{
 		Host:     os.Getenv("OTPGEN_REDIS_HOST"),
 		Port:     os.Getenv("OTPGEN_REDIS_PORT"),

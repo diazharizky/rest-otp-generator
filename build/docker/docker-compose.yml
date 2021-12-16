@@ -4,14 +4,21 @@ services:
     image: redis:6.0
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 1s
       timeout: 3s
       retries: 30
-    ports:
-      - 6379:6379
-    volumes:
-      - redis:/data
 
-volumes:
-  redis:
+  test:
+    image: diazharizky/golang:1.17.5-alpine
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - OTPGEN_REDIS_HOST=redis
+      - OTPGEN_REDIS_PORT=6379
+    volumes:
+      - ../../:${PWD}/../..
+      - ${GOPATH}/pkg:/go/pkg
+    working_dir: ${PWD}/../..
+    command: make test

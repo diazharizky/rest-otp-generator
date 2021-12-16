@@ -9,6 +9,9 @@ run:
 generate:
 	go generate -v ./... && go get -v ./...
 
+test:
+	go test ./...
+
 build:
 	go build -v -o "bin/rest-otp-generator"
 
