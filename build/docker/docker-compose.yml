@@ -8,6 +8,8 @@ services:
       interval: 1s
       timeout: 3s
       retries: 30
+    ports:
+      - "6379:6379"
 
   test:
     image: diazharizky/golang:1.17.5-alpine
@@ -15,8 +17,9 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - OTPGEN_REDIS_HOST=redis
-      - OTPGEN_REDIS_PORT=6379
+      - CONFIG_FILE_PATH=${PWD}/../../configs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ../../:${PWD}/../..
       - ${GOPATH}/pkg:/go/pkg

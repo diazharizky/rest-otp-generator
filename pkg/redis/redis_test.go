@@ -1,21 +1,13 @@
 package redis
 
 import (
-	"os"
-	"strconv"
 	"testing"
 )
 
 var svc Service
 
 func init() {
-	dbIndex, _ := strconv.ParseInt(os.Getenv("OTPGEN_REDIS_DB"), 10, 0)
-	cfg := Cfg{
-		Host:     os.Getenv("OTPGEN_REDIS_HOST"),
-		Port:     os.Getenv("OTPGEN_REDIS_PORT"),
-		Database: int(dbIndex),
-	}
-	svc = Service{Client: Connect(cfg)}
+	svc = Service{Client: Connect(GetCfg())}
 }
 
 func TestGetConnection(t *testing.T) {

@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -19,8 +20,13 @@ func init() {
 func loadConfig() {
 	Cfg.SetConfigName("default")
 	Cfg.SetConfigType("yaml")
-	Cfg.AddConfigPath("./configs")
 
+	configFilePath := os.Getenv("CONFIG_FILE_PATH")
+	if len(configFilePath) <= 0 {
+		configFilePath = "./configs"
+	}
+
+	Cfg.AddConfigPath(configFilePath)
 	if err := Cfg.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("cannot read config file: %w", err))
 	}

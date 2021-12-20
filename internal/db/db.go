@@ -3,10 +3,15 @@ package db
 import (
 	"context"
 
-	"github.com/diazharizky/rest-otp-generator/configs"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
-	"github.com/diazharizky/rest-otp-generator/pkg/redis"
 )
+
+type Cfg struct {
+	Host     string
+	Port     string
+	Password string
+	Database int
+}
 
 type Database interface {
 	Health() error
@@ -14,18 +19,4 @@ type Database interface {
 	Get(context.Context, *otp.OTPBase) error
 	Upsert(context.Context, otp.OTPBase) error
 	Delete(ctx context.Context, key string) error
-}
-
-func GetCfg() redis.Cfg {
-	configs.Cfg.SetDefault("redis.host", "0.0.0.0")
-	configs.Cfg.SetDefault("redis.port", 6379)
-	configs.Cfg.SetDefault("redis.password", "")
-	configs.Cfg.SetDefault("redis.db", 0)
-
-	return redis.Cfg{
-		Host:     configs.Cfg.GetString("redis.host"),
-		Port:     configs.Cfg.GetString("redis.port"),
-		Password: configs.Cfg.GetString("redis.password"),
-		Database: configs.Cfg.GetInt("redis.db"),
-	}
 }

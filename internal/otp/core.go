@@ -20,7 +20,7 @@ type core struct {
 var c core
 
 func init() {
-	client := redis.Connect(db.GetCfg())
+	client := redis.Connect(redis.GetCfg())
 	c.Db = &redis.Service{Client: client}
 }
 

@@ -4,28 +4,68 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 
+	"github.com/diazharizky/rest-otp-generator/configs"
+	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/go-redis/redis/v8"
 )
 
 const (
+	defaultHost     = "0.0.0.0"
+	defaultPort     = "6379"
+	defaultPassword = ""
+	defaultDB       = 0
+
 	messageInvalidOTP = "invalid OTP"
 )
 
-type Cfg struct {
-	Host     string
-	Port     string
-	Password string
-	Database int
+func GetCfg() db.Cfg {
+	configs.Cfg.SetDefault("redis.host", defaultHost)
+	configs.Cfg.SetDefault("redis.port", defaultPort)
+	configs.Cfg.SetDefault("redis.password", defaultPassword)
+	configs.Cfg.SetDefault("redis.db", defaultDB)
+
+	host := os.Getenv("REDIS_HOST")
+	if len(host) <= 0 {
+		host = configs.Cfg.GetString("redis.host")
+	}
+
+	port := os.Getenv("REDIS_PORT")
+	if len(port) <= 0 {
+		port = configs.Cfg.GetString("redis.port")
+	}
+
+	password := os.Getenv("REDIS_PASSWORD")
+	if len(password) <= 0 {
+		password = configs.Cfg.GetString("redis.password")
+	}
+
+	dbIndex := os.Getenv("REDIS_DB")
+	if len(dbIndex) <= 0 {
+		dbIndex = configs.Cfg.GetString("redis.db")
+	}
+
+	dbInt, err := strconv.Atoi(dbIndex)
+	if err != nil {
+		panic(err)
+	}
+
+	return db.Cfg{
+		Host:     host,
+		Port:     port,
+		Password: password,
+		Database: dbInt,
+	}
 }
 
 type Service struct {
 	Client *redis.Client
 }
 
-func Connect(cfg Cfg) *redis.Client {
+func Connect(cfg db.Cfg) *redis.Client {
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	return redis.NewClient(&redis.Options{
 		Addr:     addr,

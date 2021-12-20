@@ -10,10 +10,11 @@ generate:
 	go generate -v ./... && go get -v ./...
 
 test:
+	go clean -testcache && \
 	go test ./...
 
 build:
-	go build -v -o "bin/rest-otp-generator"
+	go build -v -o "bin/rog"
 
 clean:
 	rm -rf bin \
