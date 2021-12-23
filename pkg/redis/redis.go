@@ -2,112 +2,80 @@ package redis
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"encoding/json"
 	"os"
-	"strconv"
+	"time"
 
 	"github.com/diazharizky/rest-otp-generator/configs"
-	"github.com/diazharizky/rest-otp-generator/internal/db"
-	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/go-redis/redis/v8"
 )
 
-const (
-	defaultHost     = "0.0.0.0"
-	defaultPort     = "6379"
-	defaultPassword = ""
-	defaultDB       = 0
+type RedisConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+	Client   *redis.Client
+}
 
-	messageInvalidOTP = "invalid OTP"
-)
+type RedisHandler struct {
+	client *redis.Client
+}
 
-func GetCfg() db.Cfg {
-	configs.Cfg.SetDefault("redis.host", defaultHost)
-	configs.Cfg.SetDefault("redis.port", defaultPort)
-	configs.Cfg.SetDefault("redis.password", defaultPassword)
-	configs.Cfg.SetDefault("redis.db", defaultDB)
-
-	host := os.Getenv("REDIS_HOST")
-	if len(host) <= 0 {
-		host = configs.Cfg.GetString("redis.host")
+func init() {
+	redisHost := os.Getenv("REDIS_HOST")
+	if len(redisHost) > 0 {
+		configs.Cfg.Set("redis.host", redisHost)
 	}
-
-	port := os.Getenv("REDIS_PORT")
-	if len(port) <= 0 {
-		port = configs.Cfg.GetString("redis.port")
+	redisPort := os.Getenv("REDIS_PORT")
+	if len(redisPort) > 0 {
+		configs.Cfg.Set("redis.port", redisPort)
 	}
-
-	password := os.Getenv("REDIS_PASSWORD")
-	if len(password) <= 0 {
-		password = configs.Cfg.GetString("redis.password")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if len(redisPassword) > 0 {
+		configs.Cfg.Set("redis.password", redisPassword)
 	}
-
-	dbIndex := os.Getenv("REDIS_DB")
-	if len(dbIndex) <= 0 {
-		dbIndex = configs.Cfg.GetString("redis.db")
-	}
-
-	dbInt, err := strconv.Atoi(dbIndex)
-	if err != nil {
-		panic(err)
-	}
-
-	return db.Cfg{
-		Host:     host,
-		Port:     port,
-		Password: password,
-		Database: dbInt,
+	redisDB := os.Getenv("REDIS_DB")
+	if len(redisDB) > 0 {
+		configs.Cfg.Set("redis.db", redisDB)
 	}
 }
 
-type Service struct {
-	Client *redis.Client
+func GetHandler(client *redis.Client) *RedisHandler {
+	return &RedisHandler{client: client}
 }
 
-func Connect(cfg db.Cfg) *redis.Client {
-	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
-	return redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: cfg.Password,
-		DB:       cfg.Database,
-	})
-}
-
-func (r *Service) Health() (err error) {
+func (r *RedisHandler) Health() (err error) {
 	ctx := context.Background()
-	_, err = r.Client.Ping(ctx).Result()
+	_, err = r.client.Ping(ctx).Result()
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (r *Service) Get(ctx context.Context, p *otp.OTPBase) (err error) {
-	exists, err := r.Client.Exists(ctx, p.Key).Result()
+func (r *RedisHandler) Get(ctx context.Context, key string) (res []byte, err error) {
+	exists, err := r.client.Exists(ctx, key).Result()
 	if err != nil {
-		return
+		return nil, err
 	}
 	if exists == 0 {
-		return errors.New(messageInvalidOTP)
+		return nil, nil
 	}
-	if err = r.Client.HGetAll(ctx, p.Key).Scan(p); err != nil {
+	cmd := r.client.Get(ctx, key)
+	return cmd.Bytes()
+}
+
+func (r *RedisHandler) Set(ctx context.Context, key string, value interface{}, duration time.Duration) (err error) {
+	jbt, err := json.Marshal(value)
+	if err != nil {
 		return
 	}
+	err = r.client.Set(ctx, key, string(jbt), duration).Err()
 	return
 }
 
-func (r *Service) Upsert(ctx context.Context, p otp.OTPBase) (err error) {
-	maxAttempts := strconv.Itoa(int(p.MaxAttempts))
-	attempts := strconv.Itoa(int(p.Attempts))
-	if err = r.Client.HSet(ctx, p.Key, []string{"max_attempts", maxAttempts, "attempts", attempts}).Err(); err != nil {
-		return
-	}
-	err = r.Client.Expire(ctx, p.Key, p.Period).Err()
-	return
-}
-
-func (r *Service) Delete(ctx context.Context, key string) (err error) {
-	err = r.Client.Del(ctx, key).Err()
-	return
+func (r *RedisHandler) Delete(ctx context.Context, key string) error {
+	err := r.client.Del(ctx, key).Err()
+	return err
 }

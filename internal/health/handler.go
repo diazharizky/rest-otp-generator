@@ -7,11 +7,10 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func Handler() *chi.Mux {
-	r := chi.NewRouter()
+func Handler() (r *chi.Mux) {
+	r = chi.NewRouter()
 	r.Get("/", health)
-
-	return r
+	return
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +19,6 @@ func health(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
 }

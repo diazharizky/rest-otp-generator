@@ -1,29 +1,41 @@
 package health
 
 import (
+	"fmt"
+
+	"github.com/diazharizky/rest-otp-generator/configs"
 	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/redis"
+
+	myRedis "github.com/go-redis/redis/v8"
 )
 
 type core struct {
-	Db db.Database
+	DB db.Database
 }
 
 type healthStatus struct {
-	Db bool `json:"database"`
+	DB bool `json:"database"`
 }
 
 var c core
 
 func init() {
-	client := redis.Connect(redis.GetCfg())
-	c.Db = &redis.Service{Client: client}
+	dbHost := configs.Cfg.GetString("redis.host")
+	dbPort := configs.Cfg.GetString("redis.port")
+	addr := fmt.Sprintf("%s:%s", dbHost, dbPort)
+	client := myRedis.NewClient(&myRedis.Options{
+		Addr:     addr,
+		Password: configs.Cfg.GetString("redis.password"),
+		DB:       configs.Cfg.GetInt("redis.db"),
+	})
+	c.DB = redis.GetHandler(client)
 }
 
 func (c *core) healthCheck() healthStatus {
 	dbHealth := true
-	if err := c.Db.Health(); err != nil {
+	if err := c.DB.Health(); err != nil {
 		dbHealth = false
 	}
-	return healthStatus{Db: dbHealth}
+	return healthStatus{DB: dbHealth}
 }

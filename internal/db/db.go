@@ -2,21 +2,12 @@ package db
 
 import (
 	"context"
-
-	"github.com/diazharizky/rest-otp-generator/pkg/otp"
+	"time"
 )
-
-type Cfg struct {
-	Host     string
-	Port     string
-	Password string
-	Database int
-}
 
 type Database interface {
 	Health() error
-
-	Get(context.Context, *otp.OTPBase) error
-	Upsert(context.Context, otp.OTPBase) error
+	Get(context.Context, string) ([]byte, error)
+	Set(context.Context, string, interface{}, time.Duration) error
 	Delete(ctx context.Context, key string) error
 }

@@ -11,7 +11,7 @@ generate:
 
 test:
 	go clean -testcache && \
-	go test ./...
+	go test ./... -v
 
 build:
 	go build -v -o "bin/rog"

@@ -8,31 +8,42 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
+const (
+	digitsMin = 4
+	digitsMax = 6
+	periodMin = 60
+	periodMax = 300
+)
+
 type OTPBase struct {
 	Key         string
 	Period      time.Duration `json:"period"`
 	Digits      int8          `json:"digits"`
-	MaxAttempts int8          `json:"max_attempts" redis:"max_attempts"`
-	Attempts    int8          `json:"attempts" redis:"attempts"`
+	MaxAttempts int8          `json:"max_attempts"`
+	Attempts    int8          `json:"attempts"`
 }
 
 type OTPV struct {
 	OTPBase
+
 	Passcode string `json:"passcode" validate:"required"`
 }
 
 func (p *OTPBase) SetDefaultValues() {
-	if p.Digits < 4 {
-		p.Digits = 4
+	if p.Digits < digitsMin {
+		p.Digits = digitsMin
 	}
-	if p.Digits > 6 {
-		p.Digits = 6
+
+	if p.Digits > digitsMax {
+		p.Digits = digitsMax
 	}
-	if p.Period > 300 {
-		p.Period = 300 * time.Second
+
+	if p.Period > periodMax {
+		p.Period = periodMax * time.Second
 	}
-	if p.Period < 60 {
-		p.Period = 60 * time.Second
+
+	if p.Period < periodMin {
+		p.Period = periodMin * time.Second
 	}
 }
 
@@ -45,6 +56,7 @@ func GenerateCode(p OTPBase) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return passcode, nil
 }
 
@@ -57,5 +69,6 @@ func VerifyCode(p OTPV) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	return valid, nil
 }
