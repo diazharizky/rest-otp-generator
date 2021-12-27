@@ -11,27 +11,43 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/diazharizky/rest-otp-generator/configs"
+	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
-	myRedis "github.com/diazharizky/rest-otp-generator/pkg/redis"
+	cache "github.com/diazharizky/rest-otp-generator/pkg/redis"
 	"github.com/stretchr/testify/suite"
 )
 
-type redisHandlerSuite struct {
-	RedisSuite // Embed RedisSuite struct
+const (
+	defaultPeriod = 60 * time.Second
+)
+
+var otpV otp.OTPBase
+
+func init() {
+	otpV = otp.OTPBase{
+		Period:      defaultPeriod,
+		Digits:      4,
+		MaxAttempts: 4,
+	}
+}
+
+type HandlerSuite struct {
+	RedisSuite
 }
 
 func TestRedisSuite(t *testing.T) {
 	if testing.Short() {
-		t.Skip("Skip test for redis repository")
+		t.Skip("Skip test for Redis repository")
 	}
-	cfg := myRedis.RedisConfig{
-		Host:     configs.Cfg.GetString("redis.host"),
-		Port:     configs.Cfg.GetString("redis.port"),
-		Password: configs.Cfg.GetString("redis.password"),
-		DB:       configs.Cfg.GetInt("redis.db"),
-	}
-	redisHandlerSuiteTest := &redisHandlerSuite{RedisSuite{RedisConfig: cfg}}
-	suite.Run(t, redisHandlerSuiteTest)
+
+	cfg := cache.Config{Config: db.Config{
+		Host:     configs.Cfg.GetString("cache.host"),
+		Port:     configs.Cfg.GetString("cache.port"),
+		Password: configs.Cfg.GetString("cache.password"),
+		DB:       configs.Cfg.GetInt("cache.db"),
+	}}
+	HandlerSuiteTest := &HandlerSuite{RedisSuite{Config: cfg}}
+	suite.Run(t, HandlerSuiteTest)
 }
 
 func getItemByKey(client *redis.Client, key string) ([]byte, error) {
@@ -45,45 +61,37 @@ func seedDB(client *redis.Client, key string, value interface{}) error {
 		return err
 	}
 	ctx := context.Background()
-	return client.Set(ctx, key, jbt, time.Second*30).Err()
+	return client.Set(ctx, key, jbt, defaultPeriod).Err()
 }
 
-func (r *redisHandlerSuite) TestGet() {
+func (r *HandlerSuite) TestHealth() {
+	err := cache.Handler.Health()
+	assert.Nil(r.T(), err)
+}
+
+func (r *HandlerSuite) TestGet() {
 	testKey := "3f6cf12b-2a16-4a0a-97d7-2c5c2152c7db"
-	otpV := otp.OTPBase{
-		Key:         testKey,
-		Period:      60 * time.Second,
-		Digits:      4,
-		MaxAttempts: 4,
-	}
 	err := seedDB(r.Client, testKey, otpV)
 	require.NoError(r.T(), err)
 
-	repo := myRedis.GetHandler(r.Client)
 	ctx := context.Background()
-	jbt, err := repo.Get(ctx, testKey)
+	jbt, err := cache.Handler.Get(ctx, testKey)
+	require.NoError(r.T(), err)
+	require.NotNil(r.T(), jbt)
+
+	var storedData otp.OTPBase
+	err = json.Unmarshal(jbt, &storedData)
 	require.NoError(r.T(), err)
 
-	var res otp.OTPBase
-	err = json.Unmarshal(jbt, &res)
-	require.NoError(r.T(), err)
-
-	assert.Equal(r.T(), otpV.Key, res.Key)
-	assert.Equal(r.T(), otpV.Period, res.Period)
-	assert.Equal(r.T(), otpV.Digits, res.Digits)
+	assert.Equal(r.T(), storedData.Period, otpV.Period)
+	assert.Equal(r.T(), storedData.Digits, otpV.Digits)
+	assert.Equal(r.T(), storedData.MaxAttempts, otpV.MaxAttempts)
 }
 
-func (r *redisHandlerSuite) TestSet() {
-	testKey := "6cd76df0-f151-4f06-b17e-8235508d0273"
-	repo := myRedis.GetHandler(r.Client)
-	otpV := otp.OTPBase{
-		Key:         testKey,
-		Period:      60 * time.Second,
-		Digits:      4,
-		MaxAttempts: 4,
-	}
+func (r *HandlerSuite) TestSet() {
 	ctx := context.Background()
-	err := repo.Set(ctx, testKey, otpV, 300*time.Second)
+	testKey := "6cd76df0-f151-4f06-b17e-8235508d0273"
+	err := cache.Handler.Set(ctx, testKey, otpV, otpV.Period)
 	require.NoError(r.T(), err)
 
 	jbt, err := getItemByKey(r.Client, testKey)
@@ -94,8 +102,33 @@ func (r *redisHandlerSuite) TestSet() {
 	err = json.Unmarshal(jbt, &storedData)
 	require.NoError(r.T(), err)
 
-	assert.Equal(r.T(), storedData.Key, otpV.Key)
 	assert.Equal(r.T(), storedData.Period, otpV.Period)
 	assert.Equal(r.T(), storedData.Digits, otpV.Digits)
 	assert.Equal(r.T(), storedData.MaxAttempts, otpV.MaxAttempts)
+}
+
+func (r *HandlerSuite) TestDelete() {
+	testKey := "8e1e8d58-6c0f-4b8c-bc7e-1dc3442b327f"
+	err := seedDB(r.Client, testKey, otpV)
+	require.NoError(r.T(), err)
+
+	ctx := context.Background()
+	jbt, err := cache.Handler.Get(ctx, testKey)
+	require.NoError(r.T(), err)
+	require.NotNil(r.T(), jbt)
+
+	var storedData otp.OTPBase
+	err = json.Unmarshal(jbt, &storedData)
+	require.NoError(r.T(), err)
+
+	assert.Equal(r.T(), storedData.Period, otpV.Period)
+	assert.Equal(r.T(), storedData.Digits, otpV.Digits)
+	assert.Equal(r.T(), storedData.MaxAttempts, otpV.MaxAttempts)
+
+	err = cache.Handler.Delete(ctx, testKey)
+	require.NoError(r.T(), err)
+
+	jbt, err = cache.Handler.Get(ctx, testKey)
+	require.NoError(r.T(), err)
+	require.Nil(r.T(), jbt)
 }

@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+type Config struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+}
+
 type Database interface {
 	Health() error
 	Get(context.Context, string) ([]byte, error)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	httpUtils "github.com/diazharizky/rest-otp-generator/pkg/http"
 	"github.com/go-chi/chi"
 )
 
@@ -16,9 +17,8 @@ func Handler() (r *chi.Mux) {
 func health(w http.ResponseWriter, r *http.Request) {
 	res, err := json.Marshal(c.healthCheck())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(res)
+	httpUtils.ResponseSuccess(w, res)
 }

@@ -15,7 +15,6 @@ func router() chi.Router {
 	r := chi.NewRouter()
 	r.Mount("/health", health.Handler())
 	r.Mount("/otp", otp.Handler())
-
 	return r
 }
 
@@ -23,5 +22,6 @@ func Serve() {
 	listenHost := configs.Cfg.GetString("listen.host")
 	listenPort := configs.Cfg.GetInt("listen.port")
 	log.Info(fmt.Sprintf("Listening on %s:%d!", listenHost, listenPort))
-	http.ListenAndServe(fmt.Sprintf(":%d", listenPort), router())
+	err := http.ListenAndServe(fmt.Sprintf(":%d", listenPort), router())
+	fmt.Println(err)
 }

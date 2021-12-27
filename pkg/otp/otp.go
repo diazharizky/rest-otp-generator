@@ -9,10 +9,12 @@ import (
 )
 
 const (
-	digitsMin = 4
-	digitsMax = 6
-	periodMin = 60
-	periodMax = 300
+	digitsMin      = 4
+	digitsMax      = 6
+	periodMin      = 60
+	periodMax      = 300
+	maxAttemptsMin = 3
+	maxAttemptsMax = 5
 )
 
 type OTPBase struct {
@@ -33,17 +35,20 @@ func (p *OTPBase) SetDefaultValues() {
 	if p.Digits < digitsMin {
 		p.Digits = digitsMin
 	}
-
 	if p.Digits > digitsMax {
 		p.Digits = digitsMax
 	}
-
 	if p.Period > periodMax {
 		p.Period = periodMax * time.Second
 	}
-
 	if p.Period < periodMin {
 		p.Period = periodMin * time.Second
+	}
+	if p.MaxAttempts < maxAttemptsMin {
+		p.MaxAttempts = maxAttemptsMin
+	}
+	if p.MaxAttempts > maxAttemptsMax {
+		p.MaxAttempts = maxAttemptsMax
 	}
 }
 
@@ -56,7 +61,6 @@ func GenerateCode(p OTPBase) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return passcode, nil
 }
 
@@ -69,6 +73,5 @@ func VerifyCode(p OTPV) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	return valid, nil
 }

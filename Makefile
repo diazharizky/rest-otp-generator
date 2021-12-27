@@ -4,14 +4,14 @@
 .PHONY: generate build clean clean-packr
 
 run:
-	go run main.go
-
-generate:
-	go generate -v ./... && go get -v ./...
+	go run cmd/main.go
 
 test:
 	go clean -testcache && \
 	go test ./... -v
+
+generate:
+	go generate -v ./... && go get -v ./...
 
 build:
 	go build -v -o "bin/rog"

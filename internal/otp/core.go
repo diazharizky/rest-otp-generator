@@ -4,13 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
-	"github.com/diazharizky/rest-otp-generator/configs"
 	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
-	myRedis "github.com/diazharizky/rest-otp-generator/pkg/redis"
-	"github.com/go-redis/redis/v8"
+	cache "github.com/diazharizky/rest-otp-generator/pkg/redis"
 )
 
 const (
@@ -24,15 +21,7 @@ type core struct {
 var c core
 
 func init() {
-	dbHost := configs.Cfg.GetString("redis.host")
-	dbPort := configs.Cfg.GetString("redis.port")
-	addr := fmt.Sprintf("%s:%s", dbHost, dbPort)
-	client := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: configs.Cfg.GetString("redis.password"),
-		DB:       configs.Cfg.GetInt("redis.db"),
-	})
-	c.DB = myRedis.GetHandler(client)
+	c.DB = &cache.Handler
 }
 
 func (c *core) generateOTP(p *otp.OTPBase) (code string, err error) {

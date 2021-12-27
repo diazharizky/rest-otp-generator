@@ -3,58 +3,75 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/diazharizky/rest-otp-generator/configs"
+	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/go-redis/redis/v8"
 )
 
-type RedisConfig struct {
-	Host     string
-	Port     string
-	Password string
-	DB       int
-	Client   *redis.Client
+type Config struct {
+	db.Config
+
+	Client *redis.Client
 }
 
-type RedisHandler struct {
+type handler struct {
 	client *redis.Client
 }
 
+var Handler handler
+
 func init() {
-	redisHost := os.Getenv("REDIS_HOST")
-	if len(redisHost) > 0 {
-		configs.Cfg.Set("redis.host", redisHost)
+	host := os.Getenv("CACHE_HOST")
+	if len(host) <= 0 {
+		host = "0.0.0.0"
 	}
-	redisPort := os.Getenv("REDIS_PORT")
-	if len(redisPort) > 0 {
-		configs.Cfg.Set("redis.port", redisPort)
-	}
-	redisPassword := os.Getenv("REDIS_PASSWORD")
-	if len(redisPassword) > 0 {
-		configs.Cfg.Set("redis.password", redisPassword)
-	}
-	redisDB := os.Getenv("REDIS_DB")
-	if len(redisDB) > 0 {
-		configs.Cfg.Set("redis.db", redisDB)
-	}
-}
 
-func GetHandler(client *redis.Client) *RedisHandler {
-	return &RedisHandler{client: client}
-}
+	port := os.Getenv("CACHE_PORT")
+	if len(port) <= 0 {
+		port = "6379"
+	}
 
-func (r *RedisHandler) Health() (err error) {
-	ctx := context.Background()
-	_, err = r.client.Ping(ctx).Result()
+	passwd := os.Getenv("CACHE_PASSWORD")
+	if len(passwd) <= 0 {
+		passwd = ""
+	}
+
+	dbName := os.Getenv("CACHE_DB")
+	if len(dbName) <= 0 {
+		dbName = "0"
+	}
+
+	configs.Cfg.Set("cache.host", host)
+	configs.Cfg.Set("cache.port", port)
+	configs.Cfg.Set("cache.password", passwd)
+	configs.Cfg.Set("cache.db", dbName)
+
+	dbNameInt, err := strconv.Atoi(dbName)
 	if err != nil {
-		return
+		panic(err)
 	}
-	return
+
+	addr := fmt.Sprintf("%s:%s", host, port)
+	Handler = handler{
+		client: redis.NewClient(&redis.Options{
+			Addr:     addr,
+			Password: passwd,
+			DB:       dbNameInt,
+		}),
+	}
 }
 
-func (r *RedisHandler) Get(ctx context.Context, key string) (res []byte, err error) {
+func (r *handler) Health() error {
+	ctx := context.Background()
+	return r.client.Ping(ctx).Err()
+}
+
+func (r *handler) Get(ctx context.Context, key string) (res []byte, err error) {
 	exists, err := r.client.Exists(ctx, key).Result()
 	if err != nil {
 		return nil, err
@@ -62,11 +79,12 @@ func (r *RedisHandler) Get(ctx context.Context, key string) (res []byte, err err
 	if exists == 0 {
 		return nil, nil
 	}
+
 	cmd := r.client.Get(ctx, key)
 	return cmd.Bytes()
 }
 
-func (r *RedisHandler) Set(ctx context.Context, key string, value interface{}, duration time.Duration) (err error) {
+func (r *handler) Set(ctx context.Context, key string, value interface{}, duration time.Duration) (err error) {
 	jbt, err := json.Marshal(value)
 	if err != nil {
 		return
@@ -75,7 +93,10 @@ func (r *RedisHandler) Set(ctx context.Context, key string, value interface{}, d
 	return
 }
 
-func (r *RedisHandler) Delete(ctx context.Context, key string) error {
-	err := r.client.Del(ctx, key).Err()
-	return err
+func (r *handler) Delete(ctx context.Context, key string) error {
+	return r.client.Del(ctx, key).Err()
+}
+
+func (r *handler) Close() error {
+	return r.client.Close()
 }

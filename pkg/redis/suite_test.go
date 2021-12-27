@@ -3,14 +3,14 @@ package redis_test
 import (
 	"fmt"
 
-	myRedis "github.com/diazharizky/rest-otp-generator/pkg/redis"
+	cache "github.com/diazharizky/rest-otp-generator/pkg/redis"
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/suite"
 )
 
 type RedisSuite struct {
 	suite.Suite
-	myRedis.RedisConfig
+	cache.Config
 }
 
 func (r *RedisSuite) SetupSuite() {

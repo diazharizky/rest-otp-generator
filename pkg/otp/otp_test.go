@@ -28,7 +28,6 @@ func TestPasscodeLength(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-
 	codeLen := len(code)
 	assert.Equal(t, codeLen, int(otpBase.Digits), fmt.Sprintf("OTP's length doesn't match, expected %d digits found %d.", otpBase.Digits, codeLen))
 }
