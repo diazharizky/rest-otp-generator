@@ -1,7 +1,9 @@
-package configs
+package configs_test
 
 import (
 	"testing"
+
+	"github.com/diazharizky/rest-otp-generator/configs"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -17,21 +19,21 @@ const (
 )
 
 func TestConfigDefaultValue(t *testing.T) {
-	listenHost := Cfg.GetString("listen.host")
+	listenHost := configs.Cfg.GetString("listen.host")
 	assert.Equal(t, listenHost, defaultHost, "Listen host default value doesn't match")
 
-	listenPort := Cfg.GetInt("listen.port")
+	listenPort := configs.Cfg.GetInt("listen.port")
 	assert.Equal(t, listenPort, defaultPort, "Listen port default value doesn't match")
 
-	cacheHost := Cfg.GetString("cache.host")
+	cacheHost := configs.Cfg.GetString("cache.host")
 	assert.Equal(t, cacheHost, defaultCacheHost, "Cache's host default value doesn't match")
 
-	cachePort := Cfg.GetInt("cache.port")
+	cachePort := configs.Cfg.GetInt("cache.port")
 	assert.Equal(t, cachePort, defaultCachePort, "Cache's port default value doesn't match")
 
-	cachePassword := Cfg.GetString("cache.password")
+	cachePassword := configs.Cfg.GetString("cache.password")
 	assert.Equal(t, cachePassword, defaultCachePassword, "Cache's password default value doesn't match")
 
-	cacheDB := Cfg.GetInt("cache.db")
+	cacheDB := configs.Cfg.GetInt("cache.db")
 	assert.Equal(t, cacheDB, defaultCacheDB, "Cache's DB default value doesn't match")
 }

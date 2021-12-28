@@ -24,6 +24,10 @@ func Handler() (r *chi.Mux) {
 	return
 }
 
+type genOTPRes struct {
+	Passcode string `json:"passcode"`
+}
+
 func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var p otp.OTPBase
@@ -47,14 +51,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
-
-	res := map[string]interface{}{"passcode": passcode}
-	rjs, err := json.Marshal(res)
-	if err != nil {
-		httpUtils.ResponseFatal(w, []string{err.Error()})
-		return
-	}
-	httpUtils.ResponseSuccess(w, rjs)
+	httpUtils.ResponseSuccess(w, genOTPRes{Passcode: passcode})
 }
 
 func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {

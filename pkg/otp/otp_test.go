@@ -1,9 +1,11 @@
-package otp
+package otp_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,10 +15,10 @@ const (
 	otpKey = "some_otp_key"
 )
 
-var otpBase OTPBase
+var otpBase otp.OTPBase
 
 func init() {
-	otpBase = OTPBase{
+	otpBase = otp.OTPBase{
 		Key:    otpKey,
 		Period: 60 * time.Second,
 		Digits: int8(4),
@@ -24,7 +26,7 @@ func init() {
 }
 
 func TestPasscodeLength(t *testing.T) {
-	code, err := GenerateCode(otpBase)
+	code, err := otp.GenerateCode(otpBase)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -33,18 +35,42 @@ func TestPasscodeLength(t *testing.T) {
 }
 
 func TestValidVerification(t *testing.T) {
-	code, err := GenerateCode(otpBase)
+	code, err := otp.GenerateCode(otpBase)
 	require.NoError(t, err)
 
-	valid, err := VerifyCode(OTPV{OTPBase: otpBase, Passcode: code})
+	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Passcode: code})
 	require.NoError(t, err)
 
 	assert.Equal(t, true, valid, "OTP code verification shall be valid")
 }
 
 func TestInvalidVerification(t *testing.T) {
-	valid, err := VerifyCode(OTPV{OTPBase: otpBase, Passcode: "0000"})
+	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Passcode: "0000"})
 	require.NoError(t, err)
 
 	assert.Equal(t, false, valid, "OTP code verification shall be invalid")
+}
+
+func TestSetDefaultValuesFuncMin(t *testing.T) {
+	otpBase.Digits = 1
+	otpBase.Period = 10 * time.Second
+	otpBase.MaxAttempts = 1
+
+	otpBase.SetDefaultValues()
+
+	assert.Equal(t, otp.DigitsMin, otpBase.Digits)
+	assert.Equal(t, otp.PeriodMin, otpBase.Period)
+	assert.Equal(t, otp.MaxAttemptsMin, otpBase.MaxAttempts)
+}
+
+func TestSetDefaultValuesFuncMax(t *testing.T) {
+	otpBase.Digits = 7
+	otpBase.Period = 500 * time.Second
+	otpBase.MaxAttempts = 7
+
+	otpBase.SetDefaultValues()
+
+	assert.Equal(t, otp.DigitsMax, otpBase.Digits)
+	assert.Equal(t, otp.PeriodMax, otpBase.Period)
+	assert.Equal(t, otp.MaxAttemptsMax, otpBase.MaxAttempts)
 }

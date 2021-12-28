@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	digitsMin      = 4
-	digitsMax      = 6
-	periodMin      = 60
-	periodMax      = 300
-	maxAttemptsMin = 3
-	maxAttemptsMax = 5
+	DigitsMin      = int8(4)
+	DigitsMax      = int8(6)
+	PeriodMin      = 60 * time.Second
+	PeriodMax      = 300 * time.Second
+	MaxAttemptsMin = int8(3)
+	MaxAttemptsMax = int8(5)
 )
 
 type OTPBase struct {
@@ -32,23 +32,23 @@ type OTPV struct {
 }
 
 func (p *OTPBase) SetDefaultValues() {
-	if p.Digits < digitsMin {
-		p.Digits = digitsMin
+	if p.Digits < DigitsMin {
+		p.Digits = DigitsMin
 	}
-	if p.Digits > digitsMax {
-		p.Digits = digitsMax
+	if p.Digits > DigitsMax {
+		p.Digits = DigitsMax
 	}
-	if p.Period > periodMax {
-		p.Period = periodMax * time.Second
+	if p.Period > PeriodMax {
+		p.Period = PeriodMax
 	}
-	if p.Period < periodMin {
-		p.Period = periodMin * time.Second
+	if p.Period < PeriodMin {
+		p.Period = PeriodMin
 	}
-	if p.MaxAttempts < maxAttemptsMin {
-		p.MaxAttempts = maxAttemptsMin
+	if p.MaxAttempts < MaxAttemptsMin {
+		p.MaxAttempts = MaxAttemptsMin
 	}
-	if p.MaxAttempts > maxAttemptsMax {
-		p.MaxAttempts = maxAttemptsMax
+	if p.MaxAttempts > MaxAttemptsMax {
+		p.MaxAttempts = MaxAttemptsMax
 	}
 }
 
