@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/diazharizky/rest-otp-generator/configs"
-	"github.com/diazharizky/rest-otp-generator/internal/db"
+	"github.com/diazharizky/rest-otp-generator/pkg/db"
 	"github.com/go-redis/redis/v8"
 )
 

@@ -37,14 +37,14 @@ func TestValidVerification(t *testing.T) {
 	code, err := otp.GenerateCode(otpBase)
 	require.NoError(t, err)
 
-	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Passcode: code})
+	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Code: code})
 	require.NoError(t, err)
 
 	assert.Equal(t, true, valid, "OTP code verification shall be valid")
 }
 
 func TestInvalidVerification(t *testing.T) {
-	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Passcode: "0000"})
+	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Code: "0000"})
 	require.NoError(t, err)
 
 	assert.Equal(t, false, valid, "OTP code verification shall be invalid")

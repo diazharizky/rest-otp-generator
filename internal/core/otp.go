@@ -1,31 +1,14 @@
-package otp
+package core
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
-	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
-	cache "github.com/diazharizky/rest-otp-generator/pkg/redis"
 )
 
-const (
-	messageInvalidOTP = "invalid OTP"
-)
-
-type core struct {
-	DB db.Database
-}
-
-var c core
-
-func init() {
-	c.DB = &cache.Handler
-}
-
-func (c *core) generateOTP(p *otp.OTPBase) (code string, err error) {
+func (c *core) GenerateOTP(p *otp.OTPBase) (code string, err error) {
 	code, err = otp.GenerateCode(*p)
 	if err != nil {
 		return
@@ -38,41 +21,41 @@ func (c *core) generateOTP(p *otp.OTPBase) (code string, err error) {
 	return
 }
 
-func (c *core) verifyOTP(p *otp.OTPV) (err error) {
+func (c *core) VerifyOTP(p *otp.OTPV) (bool, error) {
 	ctx := context.Background()
 	jbt, err := c.DB.Get(ctx, p.Key)
 	if err != nil {
-		return
+		return false, err
 	}
 	if jbt == nil {
-		return errors.New(messageInvalidOTP)
+		return false, nil
 	}
 
 	err = json.Unmarshal(jbt, &p.OTPBase)
 	if err != nil {
-		return
+		return false, err
 	}
 	if p.Attempts >= p.MaxAttempts {
 		if err = c.DB.Delete(ctx, p.Key); err != nil {
-			return
+			return false, err
 		}
-		return errors.New(messageInvalidOTP)
+		return false, nil
 	}
 
 	valid, err := otp.VerifyCode(*p)
 	if err != nil {
-		return
+		return false, err
 	}
 	if !valid {
 		p.Attempts += 1
 		if err = c.DB.Set(ctx, p.Key, p.OTPBase, time.Duration(p.Period)*time.Second); err != nil {
-			return
+			return false, err
 		}
-		return errors.New(messageInvalidOTP)
+		return false, nil
 	}
 
 	if err = c.DB.Delete(ctx, p.Key); err != nil {
-		return
+		return false, err
 	}
-	return nil
+	return true, nil
 }

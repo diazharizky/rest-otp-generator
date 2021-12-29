@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/diazharizky/rest-otp-generator/configs"
-	"github.com/diazharizky/rest-otp-generator/internal/db"
+	"github.com/diazharizky/rest-otp-generator/pkg/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	cache "github.com/diazharizky/rest-otp-generator/pkg/redis"
 	"github.com/stretchr/testify/suite"

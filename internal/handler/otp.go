@@ -1,10 +1,11 @@
-package otp
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
+	core "github.com/diazharizky/rest-otp-generator/internal/core"
 	httpUtils "github.com/diazharizky/rest-otp-generator/pkg/http"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/go-chi/chi"
@@ -12,20 +13,35 @@ import (
 )
 
 const (
-	otpMessageValid   = "Your OTP is valid."
-	otpMessageInvalid = "Your OTP is invalid."
+	otpMsgValid   = "Your OTP is valid."
+	otpMsgInvalid = "Your OTP is invalid."
 )
 
-func Handler() (r *chi.Mux) {
+type pscode struct {
+	Code string `json:"code"`
+}
+
+type otpManager interface {
+	GenerateOTP(*otp.OTPBase) (string, error)
+	VerifyOTP(*otp.OTPV) (bool, error)
+}
+
+type otpDriver struct {
+	otpManager
+}
+
+var odr otpDriver
+
+func init() {
+	odr = otpDriver{&core.Core}
+}
+
+func otpHandler() (r *chi.Mux) {
 	r = chi.NewRouter()
 	basePath := "/{key}"
 	r.Post(basePath, generateOTPHandler)
 	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTPHandler)
 	return
-}
-
-type genOTPRes struct {
-	Passcode string `json:"passcode"`
 }
 
 func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +62,12 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 	p.Key = chi.URLParam(r, "key")
 	p.Attempts = 0
 	p.FixParams()
-	passcode, err := c.generateOTP(&p)
+	code, err := odr.GenerateOTP(&p)
 	if err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
-	httpUtils.ResponseSuccess(w, genOTPRes{Passcode: passcode})
+	httpUtils.ResponseSuccess(w, pscode{Code: code})
 }
 
 func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,16 +85,21 @@ func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(p.Passcode) != int(p.Digits) {
-		httpUtils.ResponseBadRequest(w, []string{otpMessageInvalid})
+	if len(p.Code) != int(p.Digits) {
+		httpUtils.ResponseBadRequest(w, []string{otpMsgInvalid})
 		return
 	}
 
 	p.Key = chi.URLParam(r, "key")
 	p.FixParams()
-	if err = c.verifyOTP(&p); err != nil {
+	valid, err := odr.VerifyOTP(&p)
+	if err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
-	httpUtils.ResponseSuccess(w, otpMessageValid)
+	if !valid {
+		httpUtils.ResponseBadRequest(w, []string{otpMsgInvalid})
+		return
+	}
+	httpUtils.ResponseSuccess(w, otpMsgValid)
 }
