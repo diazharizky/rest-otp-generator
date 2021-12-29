@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/diazharizky/rest-otp-generator/internal/db"
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
@@ -31,7 +32,7 @@ func (c *core) generateOTP(p *otp.OTPBase) (code string, err error) {
 	}
 
 	ctx := context.Background()
-	if err = c.DB.Set(ctx, p.Key, *p, p.Period); err != nil {
+	if err = c.DB.Set(ctx, p.Key, *p, time.Duration(p.Period)*time.Second); err != nil {
 		return
 	}
 	return
@@ -64,7 +65,7 @@ func (c *core) verifyOTP(p *otp.OTPV) (err error) {
 	}
 	if !valid {
 		p.Attempts += 1
-		if err = c.DB.Set(ctx, p.Key, p.OTPBase, p.Period); err != nil {
+		if err = c.DB.Set(ctx, p.Key, p.OTPBase, time.Duration(p.Period)*time.Second); err != nil {
 			return
 		}
 		return errors.New(messageInvalidOTP)

@@ -45,7 +45,7 @@ func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 	p.Key = chi.URLParam(r, "key")
 	p.Attempts = 0
-	p.SetDefaultValues()
+	p.FixParams()
 	passcode, err := c.generateOTP(&p)
 	if err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
@@ -75,7 +75,7 @@ func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	p.SetDefaultValues()
+	p.FixParams()
 	if err = c.verifyOTP(&p); err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return

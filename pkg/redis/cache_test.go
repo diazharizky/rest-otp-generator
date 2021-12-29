@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	defaultPeriod = 60 * time.Second
+	defaultPeriod      = 60
+	defaultDigits      = 4
+	defaultMaxAttemtps = 4
 )
 
 var otpV otp.OTPBase
@@ -26,8 +28,8 @@ var otpV otp.OTPBase
 func init() {
 	otpV = otp.OTPBase{
 		Period:      defaultPeriod,
-		Digits:      4,
-		MaxAttempts: 4,
+		Digits:      defaultDigits,
+		MaxAttempts: defaultMaxAttemtps,
 	}
 }
 
@@ -61,7 +63,7 @@ func seedDB(client *redis.Client, key string, value interface{}) error {
 		return err
 	}
 	ctx := context.Background()
-	return client.Set(ctx, key, jbt, defaultPeriod).Err()
+	return client.Set(ctx, key, jbt, defaultPeriod*time.Second).Err()
 }
 
 func (r *HandlerSuite) TestHealth() {
@@ -91,7 +93,7 @@ func (r *HandlerSuite) TestGet() {
 func (r *HandlerSuite) TestSet() {
 	ctx := context.Background()
 	testKey := "6cd76df0-f151-4f06-b17e-8235508d0273"
-	err := cache.Handler.Set(ctx, testKey, otpV, otpV.Period)
+	err := cache.Handler.Set(ctx, testKey, otpV, time.Duration(otpV.Period)*time.Second)
 	require.NoError(r.T(), err)
 
 	jbt, err := getItemByKey(r.Client, testKey)

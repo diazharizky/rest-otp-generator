@@ -9,20 +9,20 @@ import (
 )
 
 const (
-	DigitsMin      = int8(4)
-	DigitsMax      = int8(6)
-	PeriodMin      = 60 * time.Second
-	PeriodMax      = 300 * time.Second
-	MaxAttemptsMin = int8(3)
-	MaxAttemptsMax = int8(5)
+	DigitsMin      = uint(4)
+	DigitsMax      = uint(6)
+	PeriodMin      = uint(60)
+	PeriodMax      = uint(300)
+	MaxAttemptsMin = uint(3)
+	MaxAttemptsMax = uint(5)
 )
 
 type OTPBase struct {
 	Key         string
-	Period      time.Duration `json:"period"`
-	Digits      int8          `json:"digits"`
-	MaxAttempts int8          `json:"max_attempts"`
-	Attempts    int8          `json:"attempts"`
+	Period      uint `json:"period"`
+	Digits      uint `json:"digits"`
+	MaxAttempts uint `json:"max_attempts"`
+	Attempts    uint `json:"attempts"`
 }
 
 type OTPV struct {
@@ -31,18 +31,18 @@ type OTPV struct {
 	Passcode string `json:"passcode" validate:"required"`
 }
 
-func (p *OTPBase) SetDefaultValues() {
+func (p *OTPBase) FixParams() {
 	if p.Digits < DigitsMin {
 		p.Digits = DigitsMin
 	}
 	if p.Digits > DigitsMax {
 		p.Digits = DigitsMax
 	}
-	if p.Period > PeriodMax {
-		p.Period = PeriodMax
-	}
 	if p.Period < PeriodMin {
 		p.Period = PeriodMin
+	}
+	if p.Period > PeriodMax {
+		p.Period = PeriodMax
 	}
 	if p.MaxAttempts < MaxAttemptsMin {
 		p.MaxAttempts = MaxAttemptsMin

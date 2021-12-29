@@ -3,7 +3,6 @@ package otp_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 
@@ -20,8 +19,8 @@ var otpBase otp.OTPBase
 func init() {
 	otpBase = otp.OTPBase{
 		Key:    otpKey,
-		Period: 60 * time.Second,
-		Digits: int8(4),
+		Period: 60,
+		Digits: 4,
 	}
 }
 
@@ -53,10 +52,10 @@ func TestInvalidVerification(t *testing.T) {
 
 func TestSetDefaultValuesFuncMin(t *testing.T) {
 	otpBase.Digits = 1
-	otpBase.Period = 10 * time.Second
+	otpBase.Period = 10
 	otpBase.MaxAttempts = 1
 
-	otpBase.SetDefaultValues()
+	otpBase.FixParams()
 
 	assert.Equal(t, otp.DigitsMin, otpBase.Digits)
 	assert.Equal(t, otp.PeriodMin, otpBase.Period)
@@ -65,10 +64,10 @@ func TestSetDefaultValuesFuncMin(t *testing.T) {
 
 func TestSetDefaultValuesFuncMax(t *testing.T) {
 	otpBase.Digits = 7
-	otpBase.Period = 500 * time.Second
+	otpBase.Period = 500
 	otpBase.MaxAttempts = 7
 
-	otpBase.SetDefaultValues()
+	otpBase.FixParams()
 
 	assert.Equal(t, otp.DigitsMax, otpBase.Digits)
 	assert.Equal(t, otp.PeriodMax, otpBase.Period)
