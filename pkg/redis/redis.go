@@ -30,17 +30,14 @@ func init() {
 	if len(host) <= 0 {
 		host = "0.0.0.0"
 	}
-
 	port := os.Getenv("CACHE_PORT")
 	if len(port) <= 0 {
 		port = "6379"
 	}
-
 	passwd := os.Getenv("CACHE_PASSWORD")
 	if len(passwd) <= 0 {
 		passwd = ""
 	}
-
 	dbName := os.Getenv("CACHE_DB")
 	if len(dbName) <= 0 {
 		dbName = "0"
