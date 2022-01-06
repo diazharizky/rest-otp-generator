@@ -1,15 +1,14 @@
-package handler
+package interfaces
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	core "github.com/diazharizky/rest-otp-generator/internal/core"
+	"github.com/diazharizky/rest-otp-generator/internal/application"
+	"github.com/diazharizky/rest-otp-generator/internal/domain"
 	httpUtils "github.com/diazharizky/rest-otp-generator/pkg/http"
-	"github.com/diazharizky/rest-otp-generator/pkg/otp"
 	"github.com/go-chi/chi"
-	"github.com/go-playground/validator/v10"
 )
 
 const (
@@ -17,73 +16,54 @@ const (
 	otpMsgInvalid = "Your OTP is invalid."
 )
 
-type pscode struct {
+type resCode struct {
 	Code string `json:"code"`
 }
 
-type otpManager interface {
-	GenerateOTP(*otp.OTPBase) (string, error)
-	VerifyOTP(*otp.OTPV) (bool, error)
+type otpHandler struct {
+	oa application.OTPAppInterface
 }
 
-type otpDriver struct {
-	otpManager
+func newOTPHandler(oa application.OTPAppInterface) otpHandler {
+	return otpHandler{oa}
 }
 
-var odr otpDriver
-
-func init() {
-	odr = otpDriver{&core.Core}
-}
-
-func otpHandler() (r *chi.Mux) {
+func (o *otpHandler) getHandler() (r *chi.Mux) {
 	r = chi.NewRouter()
 	basePath := "/{key}"
-	r.Post(basePath, generateOTPHandler)
-	r.Put(fmt.Sprintf("%s/verify", basePath), verifyOTPHandler)
+	r.Post(basePath, o.generateOTP)
+	r.Put(fmt.Sprintf("%s/verify", basePath), o.verifyOTP)
 	return
 }
 
-func generateOTPHandler(w http.ResponseWriter, r *http.Request) {
+func (o *otpHandler) generateOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var p otp.OTPBase
+	var p domain.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
 	defer r.Body.Close()
 
-	v := validator.New()
-	if err = v.Struct(p); err != nil {
-		httpUtils.ResponseBadRequest(w, []string{err.Error()})
-		return
-	}
-
 	p.Key = chi.URLParam(r, "key")
 	p.Attempts = 0
-	p.FixParams()
-	code, err := odr.GenerateOTP(&p)
+	p.FixProps()
+	code, err := o.oa.GenerateOTP(&p)
 	if err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
-	httpUtils.ResponseSuccess(w, pscode{Code: code})
+	httpUtils.ResponseSuccess(w, resCode{Code: code})
 }
 
-func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
+func (o *otpHandler) verifyOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var p otp.OTPV
+	var p domain.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
 	defer r.Body.Close()
-
-	v := validator.New()
-	if err = v.Struct(p); err != nil {
-		httpUtils.ResponseBadRequest(w, []string{err.Error()})
-		return
-	}
 
 	if len(p.Code) != int(p.Digits) {
 		httpUtils.ResponseBadRequest(w, []string{otpMsgInvalid})
@@ -91,8 +71,8 @@ func verifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.Key = chi.URLParam(r, "key")
-	p.FixParams()
-	valid, err := odr.VerifyOTP(&p)
+	p.FixProps()
+	valid, err := o.oa.VerifyOTP(&p)
 	if err != nil {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return

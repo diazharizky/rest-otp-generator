@@ -11,65 +11,34 @@ import (
 )
 
 const (
-	otpKey = "some_otp_key"
+	key    = "some_otp_key"
+	period = 60
+	digits = 4
+	code   = "0000"
 )
 
-var otpBase otp.OTPBase
-
-func init() {
-	otpBase = otp.OTPBase{
-		Key:    otpKey,
-		Period: 60,
-		Digits: 4,
-	}
-}
-
 func TestPasscodeLength(t *testing.T) {
-	code, err := otp.GenerateCode(otpBase)
+	code, err := otp.GenerateCode(key, period, digits)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	codeLen := len(code)
-	assert.Equal(t, codeLen, int(otpBase.Digits), fmt.Sprintf("OTP's length doesn't match, expected %d digits found %d.", otpBase.Digits, codeLen))
+	assert.Equal(t, codeLen, int(digits), fmt.Sprintf("OTP's length doesn't match, expected %d digits found %d.", digits, codeLen))
 }
 
 func TestValidVerification(t *testing.T) {
-	code, err := otp.GenerateCode(otpBase)
+	code, err := otp.GenerateCode(key, period, digits)
 	require.NoError(t, err)
 
-	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Code: code})
+	valid, err := otp.VerifyCode(key, code, period, digits)
 	require.NoError(t, err)
 
 	assert.Equal(t, true, valid, "OTP code verification shall be valid")
 }
 
 func TestInvalidVerification(t *testing.T) {
-	valid, err := otp.VerifyCode(otp.OTPV{OTPBase: otpBase, Code: "0000"})
+	valid, err := otp.VerifyCode(key, code, period, digits)
 	require.NoError(t, err)
 
 	assert.Equal(t, false, valid, "OTP code verification shall be invalid")
-}
-
-func TestSetDefaultValuesFuncMin(t *testing.T) {
-	otpBase.Digits = 1
-	otpBase.Period = 10
-	otpBase.MaxAttempts = 1
-
-	otpBase.FixParams()
-
-	assert.Equal(t, otp.DigitsMin, otpBase.Digits)
-	assert.Equal(t, otp.PeriodMin, otpBase.Period)
-	assert.Equal(t, otp.MaxAttemptsMin, otpBase.MaxAttempts)
-}
-
-func TestSetDefaultValuesFuncMax(t *testing.T) {
-	otpBase.Digits = 7
-	otpBase.Period = 500
-	otpBase.MaxAttempts = 7
-
-	otpBase.FixParams()
-
-	assert.Equal(t, otp.DigitsMax, otpBase.Digits)
-	assert.Equal(t, otp.PeriodMax, otpBase.Period)
-	assert.Equal(t, otp.MaxAttemptsMax, otpBase.MaxAttempts)
 }
