@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/diazharizky/rest-otp-generator/internal/domain"
-	"github.com/diazharizky/rest-otp-generator/internal/domain/repository"
 	cacheService "github.com/diazharizky/rest-otp-generator/pkg/cache"
 	"github.com/go-redis/redis/v8"
 )
@@ -13,8 +12,6 @@ import (
 type otpCache struct {
 	client *redis.Client
 }
-
-var _ repository.OTPRepository = &otpCache{}
 
 func (r *otpCache) Get(otpKey string, p *domain.OTP) error {
 	byt, err := cacheService.Get(r.client, otpKey)

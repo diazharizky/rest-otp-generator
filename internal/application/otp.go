@@ -15,8 +15,6 @@ type OTPAppInterface interface {
 	VerifyOTP(*domain.OTP) (bool, error)
 }
 
-var _ OTPAppInterface = &otpApp{}
-
 func NewOTPApp(or repository.OTPRepository) otpApp {
 	return otpApp{or}
 }

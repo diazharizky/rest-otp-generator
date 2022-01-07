@@ -21,7 +21,10 @@ func GetCacheConfig() (string, string, string, int) {
 	if len(dbString) <= 0 {
 		dbString = "0"
 	}
-	db, _ := strconv.Atoi(dbString)
+	db, err := strconv.Atoi(dbString)
+	if err != nil {
+		panic(err)
+	}
 
 	return host, port, passwd, db
 }

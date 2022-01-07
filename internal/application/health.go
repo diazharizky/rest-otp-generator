@@ -13,8 +13,6 @@ type healthApp struct {
 	r repository.HealthRepository
 }
 
-var _ HealthAppInterface = &healthApp{}
-
 func NewHealthApp(hr repository.HealthRepository) healthApp {
 	return healthApp{hr}
 }
