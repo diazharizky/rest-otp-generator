@@ -13,23 +13,26 @@ type otpCache struct {
 	client *redis.Client
 }
 
-func (r *otpCache) Get(otpKey string, p *domain.OTP) error {
+func (r *otpCache) Get(otpKey string, p *domain.OTP) (bool, error) {
 	byt, err := cacheService.Get(r.client, otpKey)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if byt == nil {
-		return nil
+		return false, nil
 	}
+
 	err = json.Unmarshal(byt, &p)
 	if err != nil {
-		return err
+		return false, err
 	}
-	return nil
+
+	return true, nil
 }
 
 func (r *otpCache) Upsert(p domain.OTP) error {
-	return cacheService.Set(r.client, p.Key, p, time.Duration(p.Period))
+	period := p.Period * uint(time.Second)
+	return cacheService.Set(r.client, p.Key, p, time.Duration(period))
 }
 
 func (r *otpCache) Delete(otpKey string) error {

@@ -32,9 +32,13 @@ func (i *otpApp) GenerateOTP(p *domain.OTP) (string, error) {
 }
 
 func (i *otpApp) VerifyOTP(p *domain.OTP) (bool, error) {
-	err := i.r.Get(p.Key, p)
+	code := p.Code
+	exists, err := i.r.Get(p.Key, p)
 	if err != nil {
 		return false, err
+	}
+	if !exists {
+		return false, nil
 	}
 
 	if p.Attempts >= p.MaxAttempts {
@@ -42,11 +46,11 @@ func (i *otpApp) VerifyOTP(p *domain.OTP) (bool, error) {
 		return false, nil
 	}
 
-	isValid, err := otp.VerifyCode(p.Key, p.Code, p.Period, p.Digits)
+	valid, err := otp.VerifyCode(p.Key, code, p.Period, p.Digits)
 	if err != nil {
 		return false, err
 	}
-	if !isValid {
+	if !valid {
 		p.Attempts += 1
 		if err = i.r.Upsert(*p); err != nil {
 			return false, err

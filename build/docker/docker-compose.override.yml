@@ -6,6 +6,7 @@ services:
       - ../../:${PWD}/../..
       - ${GOPATH}/pkg:/go/pkg
     working_dir: ${PWD}/../..
-    command: make run
+    entrypoint: /bin/sh
+    command: -c "tail -f /dev/null"
     ports:
       - 3000:3000
