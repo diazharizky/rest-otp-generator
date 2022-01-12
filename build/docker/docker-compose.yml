@@ -26,10 +26,11 @@ services:
     working_dir: ${PWD}/../..
     command: make test
 
-  reog:
-    build:
-      context: ../../
-      dockerfile: ./build/docker/Dockerfile
+  main:
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
-      - CONFIG_FILE_PATH=/etc/erbeta
+      - CACHE_HOST=redis
+      - CACHE_PORT=6379

@@ -1,0 +1,11 @@
+version: "3.4"
+services:
+  main:
+    image: diazharizky/golang:1.17.5-alpine
+    volumes:
+      - ../../:${PWD}/../..
+      - ${GOPATH}/pkg:/go/pkg
+    working_dir: ${PWD}/../..
+    command: make run
+    ports:
+      - 3000:3000
