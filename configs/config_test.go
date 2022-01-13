@@ -10,7 +10,7 @@ import (
 
 const (
 	defaultHost = "0.0.0.0"
-	defaultPort = 3000
+	defaultPort = 8080
 
 	defaultCacheHost     = "0.0.0.0"
 	defaultCachePort     = 6379

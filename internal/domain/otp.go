@@ -1,5 +1,17 @@
 package domain
 
+const (
+	MinPeriod      = uint(60)
+	MaxPeriod      = uint(300)
+	MinDigits      = uint(3)
+	MaxDigits      = uint(6)
+	MinMaxAttempts = uint(3)
+	MaxMaxAttemtps = uint(5)
+
+	OTPCodeRequiredMsg = "OTP code required."
+	MismatchOTPLenMsg  = "OTP code's length doesn't equal with digit value."
+)
+
 type OTP struct {
 	Key         string
 	Period      uint   `json:"period"`
@@ -10,30 +22,35 @@ type OTP struct {
 }
 
 func (p *OTP) FixProps() {
-	if p.Period < 60 {
-		p.Period = 60
+	if p.Period < MinPeriod {
+		p.Period = MinPeriod
 	}
-	if p.Period > 300 {
-		p.Period = 300
+	if p.Period > MaxPeriod {
+		p.Period = MaxPeriod
 	}
-	if p.Digits < 3 {
-		p.Digits = 3
+	if p.Digits < MinDigits {
+		p.Digits = MinDigits
 	}
-	if p.Digits > 6 {
-		p.Digits = 6
+	if p.Digits > MaxDigits {
+		p.Digits = MaxDigits
 	}
-	if p.MaxAttempts < 3 {
-		p.MaxAttempts = 3
+	if p.MaxAttempts < MinMaxAttempts {
+		p.MaxAttempts = MinMaxAttempts
 	}
-	if p.MaxAttempts > 5 {
-		p.MaxAttempts = 5
+	if p.MaxAttempts > MaxMaxAttemtps {
+		p.MaxAttempts = MaxMaxAttemtps
 	}
 }
 
 func (p OTP) ValidateProps() []string {
 	errMessages := []string{}
-	if len(p.Code) <= 0 {
-		errMessages = append(errMessages, "OTP code required.")
+	codeLen := len(p.Code)
+	if codeLen <= 0 {
+		errMessages = append(errMessages, OTPCodeRequiredMsg)
+	} else {
+		if codeLen != int(p.Digits) {
+			errMessages = append(errMessages, MismatchOTPLenMsg)
+		}
 	}
 	return errMessages
 }

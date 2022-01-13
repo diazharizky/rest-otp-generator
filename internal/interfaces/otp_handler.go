@@ -53,7 +53,7 @@ func (o *otpHandler) generateOTP(w http.ResponseWriter, r *http.Request) {
 		httpUtils.ResponseFatal(w, []string{err.Error()})
 		return
 	}
-	httpUtils.ResponseSuccess(w, resCode{Code: code})
+	httpUtils.ResponseSuccess(w, resCode{code})
 }
 
 func (o *otpHandler) verifyOTP(w http.ResponseWriter, r *http.Request) {
@@ -65,8 +65,9 @@ func (o *otpHandler) verifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if len(p.Code) != int(p.Digits) {
-		httpUtils.ResponseBadRequest(w, []string{otpMsgInvalid})
+	errMessages := p.ValidateProps()
+	if len(errMessages) > 0 {
+		httpUtils.ResponseBadRequest(w, errMessages)
 		return
 	}
 

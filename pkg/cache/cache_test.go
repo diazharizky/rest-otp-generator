@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	testKey = "some-test-key"
+	testKey       = "some-test-key"
+	cacheDuration = 30 * time.Second
 )
 
 type book struct {
@@ -33,8 +34,8 @@ var b book
 func init() {
 	b = book{
 		Title:     "Jungle Book",
-		Author:    "John Doe",
-		Publisher: "Kindle",
+		Author:    "Fulan",
+		Publisher: "Gramedia",
 	}
 }
 
@@ -66,11 +67,11 @@ func seedItem(client *redis.Client, key string, value interface{}) error {
 		return err
 	}
 	ctx := context.Background()
-	return client.Set(ctx, key, byt, 30*time.Second).Err()
+	return client.Set(ctx, key, byt, cacheDuration).Err()
 }
 
 func (r *cacheHandlerSuite) TestSet() {
-	err := cache.Set(r.Client, testKey, b, 30*time.Second)
+	err := cache.Set(r.Client, testKey, b, cacheDuration)
 	require.NoError(r.T(), err)
 
 	byt, err := getItemByKey(r.Client, testKey)

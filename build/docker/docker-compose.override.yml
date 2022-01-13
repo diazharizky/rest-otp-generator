@@ -9,4 +9,4 @@ services:
     entrypoint: /bin/sh
     command: -c "tail -f /dev/null"
     ports:
-      - 3000:3000
+      - 3000:8080

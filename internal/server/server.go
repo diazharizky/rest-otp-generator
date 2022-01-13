@@ -13,5 +13,6 @@ func Serve() {
 	listenHost := configs.Cfg.GetString("listen.host")
 	listenPort := configs.Cfg.GetInt("listen.port")
 	log.Info(fmt.Sprintf("Listening on %s:%d!", listenHost, listenPort))
+
 	http.ListenAndServe(fmt.Sprintf(":%d", listenPort), interfaces.Router())
 }
