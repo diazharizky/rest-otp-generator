@@ -9,13 +9,25 @@ import (
 	"github.com/go-chi/chi"
 )
 
+const (
+	CacheDefaultHost = "0.0.0.0"
+	CacheDefaultPort = "6379"
+	CacheDefaultPass = ""
+	CacheDefaultDB   = "0"
+
+	EnvCacheHost = "CACHE_HOST"
+	EnvCachePort = "CACHE_PORT"
+	EnvCachePass = "CACHE_PASSWORD"
+	EnvCacheDB   = "CACHE_DB"
+)
+
 func Router() (r chi.Router) {
-	c := cache.NewCache(cacheConfig())
+	c := cache.NewCache(CacheConfig())
 	ha := application.NewHealthApp(&c.HealthCache)
 	oa := application.NewOTPApp(&c.OTPCache)
 
-	hh := newHealthHandler(&ha)
-	oh := newOTPHandler(&oa)
+	hh := NewHealthHandler(&ha)
+	oh := NewOTPHandler(&oa)
 
 	r = chi.NewRouter()
 	r.Mount("/health", hh.getHandler())
@@ -23,21 +35,21 @@ func Router() (r chi.Router) {
 	return
 }
 
-func cacheConfig() (string, string, string, int) {
-	host := os.Getenv("CACHE_HOST")
+func CacheConfig() (string, string, string, int) {
+	host := os.Getenv(EnvCacheHost)
 	if len(host) <= 0 {
-		host = "0.0.0.0"
+		host = CacheDefaultHost
 	}
 
-	port := os.Getenv("CACHE_PORT")
+	port := os.Getenv(EnvCachePort)
 	if len(port) <= 0 {
-		port = "6379"
+		port = CacheDefaultPort
 	}
 
-	passwd := os.Getenv("CACHE_PASSWORD")
-	dbString := os.Getenv("CACHE_DB")
+	passwd := os.Getenv(EnvCachePass)
+	dbString := os.Getenv(EnvCacheDB)
 	if len(dbString) <= 0 {
-		dbString = "0"
+		dbString = CacheDefaultDB
 	}
 	db, err := strconv.Atoi(dbString)
 	if err != nil {

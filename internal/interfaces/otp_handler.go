@@ -24,7 +24,7 @@ type otpHandler struct {
 	oa application.OTPAppInterface
 }
 
-func newOTPHandler(oa application.OTPAppInterface) otpHandler {
+func NewOTPHandler(oa application.OTPAppInterface) otpHandler {
 	return otpHandler{oa}
 }
 

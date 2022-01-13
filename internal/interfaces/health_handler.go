@@ -12,7 +12,7 @@ type healthHandler struct {
 	ha application.HealthAppInterface
 }
 
-func newHealthHandler(ha application.HealthAppInterface) healthHandler {
+func NewHealthHandler(ha application.HealthAppInterface) healthHandler {
 	return healthHandler{ha}
 }
 
