@@ -8,20 +8,20 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type healthHandler struct {
+type HealthHandler struct {
 	ha application.HealthAppInterface
 }
 
-func NewHealthHandler(ha application.HealthAppInterface) healthHandler {
-	return healthHandler{ha}
+func NewHealthHandler(ha application.HealthAppInterface) HealthHandler {
+	return HealthHandler{ha}
 }
 
-func (h *healthHandler) getHandler() (r *chi.Mux) {
+func (h *HealthHandler) getHandler() (r *chi.Mux) {
 	r = chi.NewRouter()
-	r.Get("/", h.healthCheck)
+	r.Get("/", h.HealthCheck)
 	return
 }
 
-func (h *healthHandler) healthCheck(w http.ResponseWriter, r *http.Request) {
+func (h *HealthHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	httpUtils.ResponseSuccess(w, h.ha.HealthCheck())
 }

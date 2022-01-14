@@ -20,23 +20,23 @@ type resCode struct {
 	Code string `json:"code"`
 }
 
-type otpHandler struct {
+type OTPHandler struct {
 	oa application.OTPAppInterface
 }
 
-func NewOTPHandler(oa application.OTPAppInterface) otpHandler {
-	return otpHandler{oa}
+func NewOTPHandler(oa application.OTPAppInterface) OTPHandler {
+	return OTPHandler{oa}
 }
 
-func (o *otpHandler) getHandler() (r *chi.Mux) {
+func (o *OTPHandler) getHandler() (r *chi.Mux) {
 	r = chi.NewRouter()
 	basePath := "/{key}"
-	r.Post(basePath, o.generateOTP)
-	r.Put(fmt.Sprintf("%s/verify", basePath), o.verifyOTP)
+	r.Post(basePath, o.GenerateOTP)
+	r.Put(fmt.Sprintf("%s/verify", basePath), o.VerifyOTP)
 	return
 }
 
-func (o *otpHandler) generateOTP(w http.ResponseWriter, r *http.Request) {
+func (o *OTPHandler) GenerateOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var p domain.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
@@ -56,7 +56,7 @@ func (o *otpHandler) generateOTP(w http.ResponseWriter, r *http.Request) {
 	httpUtils.ResponseSuccess(w, resCode{code})
 }
 
-func (o *otpHandler) verifyOTP(w http.ResponseWriter, r *http.Request) {
+func (o *OTPHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var p domain.OTP
 	if err = json.NewDecoder(r.Body).Decode(&p); err != nil {
