@@ -4,12 +4,18 @@ services:
     image: redis:6.0
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 1s
       timeout: 3s
       retries: 30
-    ports:
-      - "6379:6379"
+
+  build_dep:
+    image: diazharizky/golang:1.17.5-alpine
+    volumes:
+      - ../../:${PWD}/../..
+      - go_dep:/go
+    working_dir: ${PWD}/../..
+    command: go mod download
 
   test:
     image: diazharizky/golang:1.17.5-alpine
@@ -22,11 +28,11 @@ services:
       - CACHE_PORT=6379
     volumes:
       - ../../:${PWD}/../..
-      - ${GOPATH}/pkg:/go/pkg
+      - go_dep:/go
     working_dir: ${PWD}/../..
     command: make test
 
-  main:
+  app:
     restart: unless-stopped
     depends_on:
       redis:
@@ -34,3 +40,6 @@ services:
     environment:
       - CACHE_HOST=redis
       - CACHE_PORT=6379
+
+volumes:
+  go_dep: null

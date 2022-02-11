@@ -1,10 +1,10 @@
 version: "3.4"
 services:
-  main:
+  app:
     image: diazharizky/golang:1.17.5-alpine
     volumes:
       - ../../:${PWD}/../..
-      - ${GOPATH}/pkg:/go/pkg
+      - go_dep:/go
     working_dir: ${PWD}/../..
     entrypoint: /bin/sh
     command: -c "tail -f /dev/null"
